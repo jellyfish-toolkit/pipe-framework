@@ -1,0 +1,327 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pipes &#8212; Pipe Framework  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for pipes</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Conversion pipeline templates.</span>
+
+<span class="sd">The problem:</span>
+<span class="sd">------------</span>
+
+<span class="sd">Suppose you have some data that you want to convert to another format,</span>
+<span class="sd">such as from GIF image format to PPM image format.  Maybe the</span>
+<span class="sd">conversion involves several steps (e.g. piping it through compress or</span>
+<span class="sd">uuencode).  Some of the conversion steps may require that their input</span>
+<span class="sd">is a disk file, others may be able to read standard input; similar for</span>
+<span class="sd">their output.  The input to the entire conversion may also be read</span>
+<span class="sd">from a disk file or from an open file, and similar for its output.</span>
+
+<span class="sd">The module lets you construct a pipeline template by sticking one or</span>
+<span class="sd">more conversion steps together.  It will take care of creating and</span>
+<span class="sd">removing temporary files if they are necessary to hold intermediate</span>
+<span class="sd">data.  You can then use the template to do conversions from many</span>
+<span class="sd">different sources to many different destinations.  The temporary</span>
+<span class="sd">file names used are different each time the template is used.</span>
+
+<span class="sd">The templates are objects so you can create templates for many</span>
+<span class="sd">different conversion steps and store them in a dictionary, for</span>
+<span class="sd">instance.</span>
+
+
+<span class="sd">Directions:</span>
+<span class="sd">-----------</span>
+
+<span class="sd">To create a template:</span>
+<span class="sd">    t = Template()</span>
+
+<span class="sd">To add a conversion step to a template:</span>
+<span class="sd">   t.append(command, kind)</span>
+<span class="sd">where kind is a string of two characters: the first is &#39;-&#39; if the</span>
+<span class="sd">command reads its standard input or &#39;f&#39; if it requires a file; the</span>
+<span class="sd">second likewise for the output. The command must be valid /bin/sh</span>
+<span class="sd">syntax.  If input or output files are required, they are passed as</span>
+<span class="sd">$IN and $OUT; otherwise, it must be  possible to use the command in</span>
+<span class="sd">a pipeline.</span>
+
+<span class="sd">To add a conversion step at the beginning:</span>
+<span class="sd">   t.prepend(command, kind)</span>
+
+<span class="sd">To convert a file to another file using a template:</span>
+<span class="sd">  sts = t.copy(infile, outfile)</span>
+<span class="sd">If infile or outfile are the empty string, standard input is read or</span>
+<span class="sd">standard output is written, respectively.  The return value is the</span>
+<span class="sd">exit status of the conversion pipeline.</span>
+
+<span class="sd">To open a file for reading or writing through a conversion pipeline:</span>
+<span class="sd">   fp = t.open(file, mode)</span>
+<span class="sd">where mode is &#39;r&#39; to read the file, or &#39;w&#39; to write it -- just like</span>
+<span class="sd">for the built-in function open() or for os.popen().</span>
+
+<span class="sd">To create a new template object initialized to a given one:</span>
+<span class="sd">   t2 = t.clone()</span>
+<span class="sd">&quot;&quot;&quot;</span>                                     <span class="c1"># &#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="c1"># we import the quote function rather than the module for backward compat</span>
+<span class="c1"># (quote used to be an undocumented but used function in pipes)</span>
+<span class="kn">from</span> <span class="nn">shlex</span> <span class="kn">import</span> <span class="n">quote</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Template&quot;</span><span class="p">]</span>
+
+<span class="c1"># Conversion step kinds</span>
+
+<span class="n">FILEIN_FILEOUT</span> <span class="o">=</span> <span class="s1">&#39;ff&#39;</span>                   <span class="c1"># Must read &amp; write real files</span>
+<span class="n">STDIN_FILEOUT</span>  <span class="o">=</span> <span class="s1">&#39;-f&#39;</span>                   <span class="c1"># Must write a real file</span>
+<span class="n">FILEIN_STDOUT</span>  <span class="o">=</span> <span class="s1">&#39;f-&#39;</span>                   <span class="c1"># Must read a real file</span>
+<span class="n">STDIN_STDOUT</span>   <span class="o">=</span> <span class="s1">&#39;--&#39;</span>                   <span class="c1"># Normal pipeline element</span>
+<span class="n">SOURCE</span>         <span class="o">=</span> <span class="s1">&#39;.-&#39;</span>                   <span class="c1"># Must be first, writes stdout</span>
+<span class="n">SINK</span>           <span class="o">=</span> <span class="s1">&#39;-.&#39;</span>                   <span class="c1"># Must be last, reads stdin</span>
+
+<span class="n">stepkinds</span> <span class="o">=</span> <span class="p">[</span><span class="n">FILEIN_FILEOUT</span><span class="p">,</span> <span class="n">STDIN_FILEOUT</span><span class="p">,</span> <span class="n">FILEIN_STDOUT</span><span class="p">,</span> <span class="n">STDIN_STDOUT</span><span class="p">,</span> \
+             <span class="n">SOURCE</span><span class="p">,</span> <span class="n">SINK</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Template"><a class="viewcode-back" href="../index.html#pipes.Template">[docs]</a><span class="k">class</span> <span class="nc">Template</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a pipeline template.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Template() returns a fresh pipeline template.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debugging</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;t.__repr__() implements repr(t).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;Template instance, steps=</span><span class="si">%r</span><span class="s1">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="Template.reset"><a class="viewcode-back" href="../index.html#pipes.Template.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;t.reset() restores a pipeline template to its initial state.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="Template.clone"><a class="viewcode-back" href="../index.html#pipes.Template.clone">[docs]</a>    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;t.clone() returns a new pipeline template with identical</span>
+<span class="sd">        initial state as the current one.&quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">Template</span><span class="p">()</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[:]</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">debugging</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">debugging</span>
+        <span class="k">return</span> <span class="n">t</span></div>
+
+<div class="viewcode-block" id="Template.debug"><a class="viewcode-back" href="../index.html#pipes.Template.debug">[docs]</a>    <span class="k">def</span> <span class="nf">debug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;t.debug(flag) turns debugging on or off.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debugging</span> <span class="o">=</span> <span class="n">flag</span></div>
+
+<div class="viewcode-block" id="Template.append"><a class="viewcode-back" href="../index.html#pipes.Template.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;t.append(cmd, kind) adds a new step at the end.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Template.append: cmd must be a string&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stepkinds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.append: bad kind </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">kind</span><span class="p">,))</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="n">SOURCE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.append: SOURCE can only be prepended&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">SINK</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.append: already ends with SINK&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kind</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\$IN\b&#39;</span><span class="p">,</span> <span class="n">cmd</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.append: missing $IN in cmd&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kind</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\$OUT\b&#39;</span><span class="p">,</span> <span class="n">cmd</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.append: missing $OUT in cmd&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">cmd</span><span class="p">,</span> <span class="n">kind</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Template.prepend"><a class="viewcode-back" href="../index.html#pipes.Template.prepend">[docs]</a>    <span class="k">def</span> <span class="nf">prepend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;t.prepend(cmd, kind) adds a new step at the front.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Template.prepend: cmd must be a string&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stepkinds</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.prepend: bad kind </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">kind</span><span class="p">,))</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="n">SINK</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.prepend: SINK can only be appended&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">SOURCE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.prepend: already begins with SOURCE&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kind</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\$IN\b&#39;</span><span class="p">,</span> <span class="n">cmd</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.prepend: missing $IN in cmd&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kind</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\$OUT\b&#39;</span><span class="p">,</span> <span class="n">cmd</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.prepend: missing $OUT in cmd&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">kind</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Template.open"><a class="viewcode-back" href="../index.html#pipes.Template.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">rw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;t.open(file, rw) returns a pipe or file object open for</span>
+<span class="sd">        reading or writing; the file is the other end of the pipeline.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">rw</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_r</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rw</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_w</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.open: rw must be </span><span class="se">\&#39;</span><span class="s1">r</span><span class="se">\&#39;</span><span class="s1"> or </span><span class="se">\&#39;</span><span class="s1">w</span><span class="se">\&#39;</span><span class="s1">, not </span><span class="si">%r</span><span class="s1">&#39;</span>
+                         <span class="o">%</span> <span class="p">(</span><span class="n">rw</span><span class="p">,))</span></div>
+
+<div class="viewcode-block" id="Template.open_r"><a class="viewcode-back" href="../index.html#pipes.Template.open_r">[docs]</a>    <span class="k">def</span> <span class="nf">open_r</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;t.open_r(file) and t.open_w(file) implement</span>
+<span class="sd">        t.open(file, &#39;r&#39;) and t.open(file, &#39;w&#39;) respectively.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">SINK</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.open_r: pipeline ends width SINK&#39;</span><span class="p">)</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">makepipeline</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">open_w</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">SOURCE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Template.open_w: pipeline begins with SOURCE&#39;</span><span class="p">)</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">makepipeline</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">makepipeline</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">makepipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">makepipeline</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debugging</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;set -x; &#39;</span> <span class="o">+</span> <span class="n">cmd</span>
+        <span class="k">return</span> <span class="n">cmd</span></div>
+
+
+<span class="k">def</span> <span class="nf">makepipeline</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+    <span class="c1"># Build a list with for each command:</span>
+    <span class="c1"># [input filename or &#39;&#39;, command string, kind, output filename or &#39;&#39;]</span>
+
+    <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">:</span>
+        <span class="nb">list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+    <span class="c1">#</span>
+    <span class="c1"># Make sure there is at least one step</span>
+    <span class="c1">#</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="nb">list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+    <span class="c1">#</span>
+    <span class="c1"># Take care of the input and output ends</span>
+    <span class="c1">#</span>
+    <span class="p">[</span><span class="n">cmd</span><span class="p">,</span> <span class="n">kind</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">kind</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">infile</span><span class="p">:</span>
+        <span class="nb">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+    <span class="nb">list</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">infile</span>
+    <span class="c1">#</span>
+    <span class="p">[</span><span class="n">cmd</span><span class="p">,</span> <span class="n">kind</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">kind</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="nb">list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+    <span class="nb">list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">outfile</span>
+    <span class="c1">#</span>
+    <span class="c1"># Invent temporary files to connect stages that need files</span>
+    <span class="c1">#</span>
+    <span class="n">garbage</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">)):</span>
+        <span class="n">lkind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">rkind</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">lkind</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span> <span class="ow">or</span> <span class="n">rkind</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">()</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+            <span class="n">garbage</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+            <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span>
+    <span class="c1">#</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="p">[</span><span class="n">inf</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">outf</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+        <span class="k">if</span> <span class="n">kind</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;OUT=&#39;</span> <span class="o">+</span> <span class="n">quote</span><span class="p">(</span><span class="n">outf</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;; &#39;</span> <span class="o">+</span> <span class="n">cmd</span>
+        <span class="k">if</span> <span class="n">kind</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;IN=&#39;</span> <span class="o">+</span> <span class="n">quote</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;; &#39;</span> <span class="o">+</span> <span class="n">cmd</span>
+        <span class="k">if</span> <span class="n">kind</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span> <span class="ow">and</span> <span class="n">inf</span><span class="p">:</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="n">cmd</span> <span class="o">+</span> <span class="s1">&#39; &lt;&#39;</span> <span class="o">+</span> <span class="n">quote</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kind</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span> <span class="ow">and</span> <span class="n">outf</span><span class="p">:</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="n">cmd</span> <span class="o">+</span> <span class="s1">&#39; &gt;&#39;</span> <span class="o">+</span> <span class="n">quote</span><span class="p">(</span><span class="n">outf</span><span class="p">)</span>
+        <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmd</span>
+    <span class="c1">#</span>
+    <span class="n">cmdlist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="p">[</span><span class="n">cmd</span><span class="p">,</span> <span class="n">kind</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;f&#39;</span> <span class="ow">in</span> <span class="n">kind</span><span class="p">:</span>
+                <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;{ &#39;</span> <span class="o">+</span> <span class="n">cmd</span> <span class="o">+</span> <span class="s1">&#39;; }&#39;</span>
+            <span class="n">cmdlist</span> <span class="o">=</span> <span class="n">cmdlist</span> <span class="o">+</span> <span class="s1">&#39; |</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">cmd</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cmdlist</span> <span class="o">=</span> <span class="n">cmdlist</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">cmd</span>
+    <span class="c1">#</span>
+    <span class="k">if</span> <span class="n">garbage</span><span class="p">:</span>
+        <span class="n">rmcmd</span> <span class="o">=</span> <span class="s1">&#39;rm -f&#39;</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">garbage</span><span class="p">:</span>
+            <span class="n">rmcmd</span> <span class="o">=</span> <span class="n">rmcmd</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">quote</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">trapcmd</span> <span class="o">=</span> <span class="s1">&#39;trap &#39;</span> <span class="o">+</span> <span class="n">quote</span><span class="p">(</span><span class="n">rmcmd</span> <span class="o">+</span> <span class="s1">&#39;; exit&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; 1 2 3 13 14 15&#39;</span>
+        <span class="n">cmdlist</span> <span class="o">=</span> <span class="n">trapcmd</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">cmdlist</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">rmcmd</span>
+    <span class="c1">#</span>
+    <span class="k">return</span> <span class="n">cmdlist</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../contents.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, NeZanyat.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
