@@ -122,7 +122,7 @@ class Pipe():
 
         """
 
-        self.data_object = self.request
+        self.data_object = DataObject(data={'request': self.request})
 
         self.__run_pipe(self.request_pipe, response=False)
         result = self.__run_pipe(self.response_pipe, response=True)
