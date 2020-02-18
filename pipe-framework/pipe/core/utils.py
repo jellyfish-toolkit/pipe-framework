@@ -9,7 +9,7 @@ from pipe.core.data import DataObject
 
 @dataclass
 class PipeList():
-    """Replacement for built-in list, provides hashing for storing list of Pipes in Werkzeug Map as endpoint
+    """Replacement for built-in list, provides making a string from list of Pipes for storing list of Pipes in Werkzeug Map as endpoint
 
     """
 
