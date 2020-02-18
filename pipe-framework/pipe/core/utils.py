@@ -37,9 +37,6 @@ class PipeList():
     def __str__(self):
         return '_'.join([str(pipe) for pipe in self.__pipes])
 
-    def __hash__(self):
-        return hash(self.__str__())
-
 
 def make_response(data: DataObject, *args, **kwargs):
     """Makes WSGI Response from DataObject
@@ -52,3 +49,15 @@ def make_response(data: DataObject, *args, **kwargs):
 
     # TODO: Ugly, change data to another name
     return Response(data.data, *args, **kwargs)
+
+
+class Singleton():
+
+    __instances: t.Dict = None
+
+    @classmethod
+    def instance(cls, name, **options):
+        if cls.__instances.get(name, None) is None:
+            cls.__instances.update({name: cls(**options)})
+
+        return cls.__instances.get(name)
