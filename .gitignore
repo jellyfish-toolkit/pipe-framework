@@ -130,5 +130,3 @@ dmypy.json
 .vscode/
 .DS_Store
 
-mock-project/
-keen-eye-poc/
