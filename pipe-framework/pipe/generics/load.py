@@ -1,6 +1,6 @@
 import typing as t
-
 import jinja2
+
 from werkzeug.wrappers import Response
 
 from pipe.core.base import Loader
@@ -39,6 +39,7 @@ class TemplateLoaderBase(Loader):
 
 
 class Jinja2TemplateLoaderBase(TemplateLoaderBase):
+
     def __init__(self, **options):
         """Setting Jinja2 environment
 
@@ -47,12 +48,10 @@ class Jinja2TemplateLoaderBase(TemplateLoaderBase):
         By default we setting only loader and autoescape, but you can rewrite it too.
         """
 
-        loader = options.get(
-            'loader', jinja2.FileSystemLoader(self.template_folder)
-        )
-        autoescape = options.get(
-            'autoescape', jinja2.select_autoescape(['html', 'xml'])
-        )
+        loader = options.get('loader', jinja2.FileSystemLoader(
+            self.template_folder
+        ))
+        autoescape = options.get('autoescape', jinja2.select_autoescape(['html', 'xml']))
 
         self.environ = jinja2.Environment(
             loader=loader, autoescape=autoescape, **options
@@ -72,6 +71,4 @@ class Jinja2TemplateLoaderBase(TemplateLoaderBase):
         status = store.get('status', 200)
         rendered_template = Store(data=template.render(**context))
 
-        return make_response(
-            rendered_template, status=status, content_type='text/html'
-        )
+        return make_response(rendered_template, status=status, content_type='text/html')

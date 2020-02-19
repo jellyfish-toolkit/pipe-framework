@@ -1,27 +1,11 @@
 import typing as t
 
-from schema import Schema
-
 from pipe.core import base
-from pipe.core.data import PipeException, Store
+from pipe.core.data import Store, PipeException
 from pipe.core.interface import Runnable
 
 
-class ValidatableMixin():
-
-    schema: dict = {}
-    errors: t.Optional[list] = None
-
-    def validate(self, store: Store, ignore_extra_keys: bool = True):
-        current_schema = Schema(
-            self.schema, ignore_extra_keys=ignore_extra_keys
-        )
-        result = current_schema.validate(store.data)
-
-        return result
-
-
-class Extractor(Runnable, ValidatableMixin):
+class Extractor(Runnable):
     """Abstract class for Extractors.
     Contains extract method which should be implemented by developer.
 
@@ -43,7 +27,7 @@ class Extractor(Runnable, ValidatableMixin):
         return self.extract(store)
 
 
-class Transformer(Runnable, ValidatableMixin):
+class Transformer(Runnable):
     """Abstract class for Transformers.
     Contains transform method which should be implemented by developer.
 
@@ -65,7 +49,7 @@ class Transformer(Runnable, ValidatableMixin):
         return self.transform(store)
 
 
-class Loader(Runnable, ValidatableMixin):
+class Loader(Runnable):
     """Abstract class for Loader.
     Contains load method which should be implemented by developer.
 
@@ -155,10 +139,11 @@ class Pipe():
             if issubclass(item.__class__, base.Extractor
                           ) or issubclass(item.__class__, base.Transformer):
 
-                validated_store = item.validate(self.store)
-                result = item.run(validated_store)
+                result = item.run(self.store)
 
-                if result is None or not issubclass(Store, result.__class__):
+                if result is None or not issubclass(
+                    Store, result.__class__
+                ):
                     raise PipeException(
                         "Transformer and Extractor should always return a Store"  # noqa: E501
                     )
