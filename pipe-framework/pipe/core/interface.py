@@ -1,6 +1,6 @@
 import abc
 
-from pipe.core.data import DataObject
+from pipe.core.data import Store
 
 
 class Runnable(abc.ABC):
@@ -10,11 +10,11 @@ class Runnable(abc.ABC):
 
     """
     @abc.abstractmethod
-    def run(self, data_object: DataObject):
+    def run(self, store: Store):
         """Method to implement. Takes data object, cause directly participate in
         piping process
 
-        :param data_object:
-        :type data: DataObject
+        :param store:
+        :type data: Store
         """
         pass

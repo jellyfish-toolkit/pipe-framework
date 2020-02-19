@@ -1,7 +1,7 @@
 import typing as t
 
 
-class DataObjectException(Exception):
+class StoreException(Exception):
     pass
 
 
@@ -9,10 +9,10 @@ class PipeException(Exception):
     pass
 
 
-class DataObject():
+class Store():
     """Data representation which go through the pipe
 
-    :raises: DataObjectException
+    :raises: StoreException
     """
     def __init__(self, data: t.Any = None):
         self.__data = data
@@ -32,6 +32,20 @@ class DataObject():
 
         :param data: defaults to None
         :type data: t.Any, optional
-        :raises: DataObjectException
+        :raises: StoreException
         """
-        raise DataObjectException("You can't mutate DataObject instance")
+        raise StoreException("You can't mutate Store instance")
+
+    def get(self, key: str, default: t.Optional[str] = None):
+        """Getter for data
+
+        :param key:
+        :type key: str
+        :param default: defaults to None
+        :type default: optional
+        :return: value from __data object
+        :rtype: t.Any
+        """
+        value = self.__data.get(key, default)
+
+        return value
