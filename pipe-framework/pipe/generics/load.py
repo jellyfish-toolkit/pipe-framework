@@ -1,8 +1,10 @@
 import typing as t
 import jinja2
 
+from werkzeug.wrappers import Response
+
 from pipe.core.base import Loader
-from pipe.core.data import DataObject
+from pipe.core.data import Store
 from pipe.core.utils import make_response
 
 
@@ -39,6 +41,12 @@ class TemplateLoaderBase(Loader):
 class Jinja2TemplateLoaderBase(TemplateLoaderBase):
 
     def __init__(self, **options):
+        """Setting Jinja2 environment
+
+        you can provide any options you can find in Jinja2 documentation.
+
+        By default we setting only loader and autoescape, but you can rewrite it too.
+        """
 
         loader = options.get('loader', jinja2.FileSystemLoader(
             self.template_folder
@@ -49,13 +57,18 @@ class Jinja2TemplateLoaderBase(TemplateLoaderBase):
             loader=loader, autoescape=autoescape, **options
         )
 
-    def load(self, data_object: DataObject):
+    def load(self, store: Store) -> Response:
+        """load
 
-        context = data_object.data.get(self.get_context_field(), {})
+        :param store: Store from Pipe
+        :type store: Store
+        :return: Werkzeug Response with template
+        :rtype: Response
+        """
+        context = store.get(self.get_context_field(), {})
         template = self.environ.get_template(self.get_template_name())
 
-        status = data_object.data.get('status', 200)
-
-        rendered_template = DataObject(data=template.render(**context))
+        status = store.get('status', 200)
+        rendered_template = Store(data=template.render(**context))
 
         return make_response(rendered_template, status=status, content_type='text/html')

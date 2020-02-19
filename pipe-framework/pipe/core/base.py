@@ -1,7 +1,7 @@
 import typing as t
 
 from pipe.core import base
-from pipe.core.data import DataObject, PipeException
+from pipe.core.data import Store, PipeException
 from pipe.core.interface import Runnable
 
 
@@ -9,22 +9,22 @@ class Extractor(Runnable):
     """Abstract class for Extractors.
     Contains extract method which should be implemented by developer.
 
-    Main goal - get the data and pass it next. Can use data_object
+    Main goal - get the data and pass it next. Can use store
     with initial parameters, and can validate input [in development]
 
     :raises: NotImplementedError
 
     """
-    def extract(self, data_object: DataObject) -> DataObject:
+    def extract(self, store: Store) -> Store:
         raise NotImplementedError
 
-    def run(self, data_object: DataObject):
+    def run(self, store: Store):
         """Interface implementation
 
-        :param data_object: data object passed from pipe
+        :param store: data object passed from pipe
 
         """
-        return self.extract(data_object)
+        return self.extract(store)
 
 
 class Transformer(Runnable):
@@ -36,17 +36,17 @@ class Transformer(Runnable):
     :raises: NotImplementedError
 
     """
-    def transform(self, data_object: DataObject) -> DataObject:
+    def transform(self, store: Store) -> Store:
         raise NotImplementedError
 
-    def run(self, data_object: DataObject):
+    def run(self, store: Store):
         """Interface implementation
 
-        :param data_object: data object passed from pipe
-        :type data_object: DataObject
+        :param store: data object passed from pipe
+        :type store: DataObject
 
         """
-        return self.transform(data_object)
+        return self.transform(store)
 
 
 class Loader(Runnable):
@@ -58,17 +58,17 @@ class Loader(Runnable):
     :raises: NotImplementedError
 
     """
-    def load(self, data_object: DataObject):
+    def load(self, store: Store):
         raise NotImplementedError
 
-    def run(self, data_object: DataObject):
+    def run(self, store: Store):
         """Interface implementation
 
-        :param data_object: data object passed from pipe
-        :type data_object: DataObject
+        :param store: data object passed from pipe
+        :type store: DataObject
 
         """
-        return self.load(data_object)
+        return self.load(store)
 
 
 class Pipe():
@@ -86,26 +86,27 @@ class Pipe():
     request_pipe: t.Iterable[Runnable] = ()
     response_pipe: t.Iterable[Runnable] = ()
 
-    def __init__(self, request):
+    def __init__(self, request, store_class=Store):
         self.__request = request
-        self.__shared_data_object: DataObject = DataObject(data=None)
+        self.__store_class = store_class
+        self.__shared_store: Store = self.__store_class(None)
 
     @property
-    def data_object(self) -> DataObject:
+    def store(self) -> Store:
         """Getter for inner data object
 
         """
-        return self.__shared_data_object
+        return self.__shared_store
 
-    @data_object.setter
-    def data_object(self, data_object: DataObject):
+    @store.setter
+    def store(self, store: Store):
         """Setter for data object
 
-        :param data_object:
-        :type data_object: DataObject
+        :param store:
+        :type store: Store
 
         """
-        self.__shared_data_object = DataObject(data_object.data)
+        self.__shared_store = self.__store_class(store.data)
 
     @property
     def request(self):
@@ -122,7 +123,7 @@ class Pipe():
 
         """
 
-        self.data_object = DataObject(data={'request': self.request})
+        self.store = self.__store_class({'request': self.request})
 
         self.__run_pipe(self.request_pipe, response=False)
         result = self.__run_pipe(self.response_pipe, response=True)
@@ -138,19 +139,19 @@ class Pipe():
             if issubclass(item.__class__, base.Extractor
                           ) or issubclass(item.__class__, base.Transformer):
 
-                result = item.run(self.data_object)
+                result = item.run(self.store)
 
                 if result is None or not issubclass(
-                    DataObject, result.__class__
+                    Store, result.__class__
                 ):
                     raise PipeException(
-                        "Transformer and Extractor should always return a DataObject"  # noqa: E501
+                        "Transformer and Extractor should always return a Store"  # noqa: E501
                     )
                 else:
-                    self.data_object = result
+                    self.store = result
 
             if issubclass(item.__class__, base.Loader) and response:
-                result = item.run(self.data_object)
+                result = item.run(self.store)
 
         return result
 

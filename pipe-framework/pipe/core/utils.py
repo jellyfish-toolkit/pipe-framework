@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from werkzeug.wrappers import Response
 
 from pipe.core.base import Pipe
-from pipe.core.data import DataObject
+from pipe.core.data import Store
 
 
 @dataclass
@@ -37,8 +37,11 @@ class PipeList():
     def __str__(self):
         return '_'.join([str(pipe) for pipe in self.__pipes])
 
+    def __hash__(self):
+        return hash(self.__str__())
 
-def make_response(data: DataObject, *args, **kwargs):
+
+def make_response(data: Store, *args, **kwargs) -> Response:
     """Makes WSGI Response from DataObject
 
     :param data: DataObject with response data

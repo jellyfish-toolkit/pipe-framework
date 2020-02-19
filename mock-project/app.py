@@ -3,35 +3,35 @@ import pipe.core as core
 import pipe.generics as generics
 
 
-class BaseTemplateLoader(generics.load.Jinja2TemplateLoaderBase):
+class TemplateLoaderBase(generics.load.Jinja2TemplateLoaderBase):
     template_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    'templates')
 
 
-class IndexTemplateLoader(BaseTemplateLoader):
-    template_name = 'index.html'
+class TemplateLoaderIndex(TemplateLoaderBase):
+    template_name = 'subfolder/index.html'
 
 
 class ContextExtractor(core.base.Extractor):
 
     def extract(self,
-                data_object: core.data.DataObject) -> core.data.DataObject:
+                store: core.data.Store) -> core.data.Store:
 
         context = {
-            'small': data_object.data.get('small', 'Not found'),
+            'small': store.get('small', 'Not found'),
             'piece': 'Hi',
             'of': 'I\'m building a context here',
             'context': 'Here it is'
         }
 
-        return core.data.DataObject(data={
+        return core.data.Store(data={
             'context': context
         })
 
 
 @core.app.path('/')
 class MainPipe(core.base.Pipe):
-    response_pipe = [ContextExtractor(), IndexTemplateLoader()]
+    response_pipe = [ContextExtractor(), TemplateLoaderIndex()]
 
 
 if __name__ == '__main__':
