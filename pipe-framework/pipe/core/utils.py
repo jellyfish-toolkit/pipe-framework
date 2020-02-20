@@ -41,17 +41,17 @@ class PipeList():
         return hash(self.__str__())
 
 
-def make_response(data: Store, *args, **kwargs) -> Response:
+def make_response(store: Store, *args, **kwargs) -> Response:
     """Makes WSGI Response from DataObject
 
-    :param data: DataObject with response data
-    :type data: DataObject
+    :param store: Store with response data
+    :type store: Store
     :return: WSGI Response
     :rtype: Response
     """
 
     # TODO: Ugly, change data to another name
-    return Response(data.data, *args, **kwargs)
+    return Response(store.data, *args, **kwargs)
 
 
 class Singleton():
