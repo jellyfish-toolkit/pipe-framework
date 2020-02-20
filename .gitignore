@@ -131,3 +131,4 @@ dmypy.json
 .DS_Store
 
 mock-project/
+keen-eye-poc/
