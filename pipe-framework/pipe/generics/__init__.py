@@ -1,1 +1,1 @@
-import pipe.generics.load as load
+import pipe.generics.template as template

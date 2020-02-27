@@ -1,5 +1,0 @@
-Pipes Framework
-===============
-
-.. automodule:: pipe.core
-   :members:
