@@ -8,7 +8,7 @@ from pipe.core.data import Store
 
 
 @dataclass
-class PipeList():
+class PipeList:
     """Replacement for built-in list, provides making a string from list of Pipes for storing list of Pipes in Werkzeug Map as endpoint
 
     """

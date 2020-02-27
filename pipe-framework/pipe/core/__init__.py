@@ -5,6 +5,7 @@ import typing as t
 from dataclasses import dataclass, field
 
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.shared_data import SharedDataMiddleware
 from werkzeug.routing import Map, Rule
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
@@ -22,13 +23,16 @@ class AppException(Exception):
 
 
 @dataclass
-class App():
+class App:
     """Main WSGI app wrapper which run pipes according to request
 
     """
 
     __paths: t.Dict[str, t.List[base.Pipe]] = None
     __map: Map = Map()
+    __static_serving: bool = False
+    __static_folder: t.Optional[str] = None
+    __static_url: t.Optional[str] = None
 
     def path(self, route: str):
         """Decorator for adding pipe as a handler for a route
@@ -38,9 +42,13 @@ class App():
         """
         def decorator(pipe):
 
+            # TODO: a bit ugly, refactoring required
             if self.__paths is None:
                 pipe_list = utils.PipeList()
                 self.__paths = {route: pipe_list}
+            elif not self.__paths.get(route, False):
+                pipe_list = utils.PipeList()
+                self.__paths.update({route: pipe_list})
             else:
                 pipe_list = self.__paths.get(route)
 
@@ -71,9 +79,21 @@ class App():
         return response(environ, start_response)
 
     def __call__(self, environ, start_response):
-        return self.wsgi_app(environ, start_response)
+        if self.__static_serving:
+            app_with_static = SharedDataMiddleware(self.wsgi_app, {self.__static_url: self.__static_folder})
+            return app_with_static(environ, start_response)
+        else:
+            return self.wsgi_app(environ, start_response)
 
-    def run(self, host: str = '127.0.0.1', port: int = 8000, *args, **kwargs):
+    def run(
+        self,
+        host: str = '127.0.0.1',
+        port: int = 8000,
+        static_folder: t.Optional[str] = None,
+        static_url: str = '/static',
+        *args,
+        **kwargs
+    ):
         """Method for running application, actually pretty similar to the Flask run method
 
         :param host: which host use for serving, defaults to '127.0.0.1'
@@ -81,6 +101,11 @@ class App():
         :param port: which port to listen, defaults to 8000
         :type port: int, optional
         """
+
+        if static_folder is not None:
+            self.__static_serving = True
+            self.__static_folder = static_folder
+            self.__static_url = static_url
 
         for path, pipes in self.__paths.items():
             self.__map.add(Rule(path, endpoint=pipes))

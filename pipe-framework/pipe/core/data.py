@@ -9,7 +9,7 @@ class PipeException(Exception):
     pass
 
 
-class Store():
+class Store:
     """Data representation which go through the pipe
 
     :raises: StoreException
@@ -46,6 +46,14 @@ class Store():
         :return: value from __data object
         :rtype: t.Any
         """
-        value = self.__data.get(key, default)
+        value = self.data.get(key, default)
 
         return value
+
+    def extend(self, store):
+        data_to_add = store.data
+        result_data = self.data
+
+        result_data.update(data_to_add)
+
+        return self.__class__(data=result_data)

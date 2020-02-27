@@ -1,11 +1,33 @@
 import typing as t
 
-from pipe.core import base
-from pipe.core.data import Store, PipeException
-from pipe.core.interface import Runnable
+from schema import Schema
+
+from pipe.core.data import PipeException, Store
+from pipe.core.interface import RunnableMixin
 
 
-class Extractor(Runnable):
+class ExtractorException(Exception):
+    pass
+
+
+class ValidatableMixin:
+    required_fields: dict = {}
+    errors: t.Optional[list] = None
+    validated_data: t.Any = None
+    save_validated: bool = True
+
+    def validate(self, store: Store, ignore_extra_keys: bool = True):
+        current_schema = Schema(self.required_fields, ignore_extra_keys=ignore_extra_keys)
+
+        result = current_schema.validate(store.data)
+
+        if self.save_validated:
+            self.validated_data = Store(data=result)
+
+        return result
+
+
+class Extractor(RunnableMixin, ValidatableMixin):
     """Abstract class for Extractors.
     Contains extract method which should be implemented by developer.
 
@@ -27,7 +49,7 @@ class Extractor(Runnable):
         return self.extract(store)
 
 
-class Transformer(Runnable):
+class Transformer(RunnableMixin, ValidatableMixin):
     """Abstract class for Transformers.
     Contains transform method which should be implemented by developer.
 
@@ -49,7 +71,7 @@ class Transformer(Runnable):
         return self.transform(store)
 
 
-class Loader(Runnable):
+class Loader(RunnableMixin, ValidatableMixin):
     """Abstract class for Loader.
     Contains load method which should be implemented by developer.
 
@@ -71,7 +93,7 @@ class Loader(Runnable):
         return self.load(store)
 
 
-class Pipe():
+class Pipe:
     """Main structure in the framework. Represent pipe through which all data pass.
 
     Pipe structure. Contains two parts - pipe for request
@@ -82,9 +104,7 @@ class Pipe():
 
     """
 
-    # pipe structure
-    request_pipe: t.Iterable[Runnable] = ()
-    response_pipe: t.Iterable[Runnable] = ()
+    pipe_schema: t.Dict[str, t.Dict[str, t.Iterable[RunnableMixin]]] = {}
 
     def __init__(self, request, store_class=Store):
         self.__request = request
@@ -94,7 +114,6 @@ class Pipe():
     @property
     def store(self) -> Store:
         """Getter for inner data object
-
         """
         return self.__shared_store
 
@@ -125,32 +144,30 @@ class Pipe():
 
         self.store = self.__store_class({'request': self.request})
 
-        self.__run_pipe(self.request_pipe, response=False)
-        result = self.__run_pipe(self.response_pipe, response=True)
+        pipe_to_run = self.pipe_schema.get(self.request.method, {'in': (), 'out': ()})
+
+        self.__run_pipe(pipe_to_run.get('in', ()), response=False)
+        result = self.__run_pipe(pipe_to_run.get('out', ()), response=True)
 
         return result
 
-    def __run_pipe(self, inner_pipe: t.Iterable[Runnable],
-                   response: bool) -> t.Union[None, t.Any]:
+    def __run_pipe(self, inner_pipe: t.Iterable[RunnableMixin], response: bool) -> t.Union[None, t.Any]:
 
         result = None
 
         for item in inner_pipe:
-            if issubclass(item.__class__, base.Extractor
-                          ) or issubclass(item.__class__, base.Transformer):
+            if issubclass(item.__class__, Extractor) or issubclass(item.__class__, Transformer):
 
+                item.validate(self.store)
                 result = item.run(self.store)
 
-                if result is None or not issubclass(
-                    Store, result.__class__
-                ):
-                    raise PipeException(
-                        "Transformer and Extractor should always return a Store"  # noqa: E501
-                    )
+                if result is None or not issubclass(Store, result.__class__):
+                    raise PipeException("Transformer and Extractor should always return a Store"  # noqa: E501
+                                        )
                 else:
                     self.store = result
 
-            if issubclass(item.__class__, base.Loader) and response:
+            if issubclass(item.__class__, Loader) and response:
                 result = item.run(self.store)
 
         return result
