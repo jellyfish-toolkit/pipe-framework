@@ -36,7 +36,7 @@ class Store:
         """
         raise StoreException("You can't mutate Store instance")
 
-    def get(self, key: str, default: t.Optional[str] = None):
+    def get(self, key: str, default: t.Optional[t.Any] = None):
         """Getter for data
 
         :param key:

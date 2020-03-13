@@ -8,7 +8,7 @@ from pipe.core.data import Store
 from pipe.core.utils import make_response
 
 
-class TemplateLoaderBase(Loader):
+class LTemplateResponseBase(Loader):
     context_field: str = 'context'
     template_folder: t.Optional[str] = None
     template_name: t.Optional[str] = None
@@ -38,7 +38,7 @@ class TemplateLoaderBase(Loader):
         return self.context_field
 
 
-class Jinja2TemplateLoaderBase(TemplateLoaderBase):
+class LJinja2TemplateResponseBase(LTemplateResponseBase):
     def __init__(self, *args, **options):
         """Setting Jinja2 environment
 

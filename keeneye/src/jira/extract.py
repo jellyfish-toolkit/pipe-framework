@@ -1,14 +1,13 @@
 import typing as t
 
-from schema import And
-from validators import url, email
 import jira
-
 from pipe.core.base import Extractor
 from pipe.core.data import Store
+from schema import And
+from validators import url, email
 
 
-class JiraIssuesExtractor(Extractor):
+class EJiraIssues(Extractor):
     ISSUE_STATUS = 'Done'
     save_validated: bool = True
     client: t.Optional[jira.JIRA] = None
@@ -43,7 +42,8 @@ class JiraIssuesExtractor(Extractor):
                                            fields='worklog, created, aggregatetimeoriginalestimate')
 
         result = {
-            'issues': issues
+            'issues': issues,
+            'user': user
         }
 
         return Store(data=result)

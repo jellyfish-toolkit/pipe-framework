@@ -2,23 +2,41 @@ import os
 
 from pipe.core import app
 from pipe.core.base import Pipe
-from pipe.generics.request.extract import FormExtractor
+from pipe.generics.helpers import TPutDefaults
+from pipe.generics.request.extract import EFormData
 
-from keeneye.load.template import TemplateLoader
-from keeneye.extract.jira import JiraIssuesExtractor
-from keeneye.transform.jira import PutDefaultsTransformer
+from src.common.load import LTemplateResponse
+from src.jira.extract import EJiraIssues
+from src.jira.transform import TCountPercents, TFromJiraToDict
 
 
 @app.path('/')
 class MainPipe(Pipe):
     pipe_schema = {
         'GET': {
-            'out': (TemplateLoader(template_name='index.html'),)
+            'out': (
+                LTemplateResponse(template_name='index.html'),
+            )
         },
         'POST': {
-            'in': (FormExtractor(), PutDefaultsTransformer(),), 'out': (JiraIssuesExtractor(),)
+            'in': (
+                EFormData(),
+                TPutDefaults(defaults={
+                    'base_url': 'https://jellyfishtech.atlassian.net',
+                    'email': 'rlatyshenko.dev@gmail.com',
+                    'api_key': 'Pc4YdcblApRoUPJOp6366310'
+                },
+                    field_name='form'),
+            ),
+            'out': (
+                EJiraIssues(),
+                TFromJiraToDict(),
+                TCountPercents()
+            )
         }
     }
+
+
 
 
 if __name__ == '__main__':

@@ -1,30 +1,11 @@
 import typing as t
 
-from schema import Schema
-
+from pipe.core.mixins import RunnableMixin, ValidatableMixin
 from pipe.core.data import PipeException, Store
-from pipe.core.interface import RunnableMixin
 
 
 class ExtractorException(Exception):
     pass
-
-
-class ValidatableMixin:
-    required_fields: dict = {}
-    errors: t.Optional[list] = None
-    validated_data: t.Any = None
-    save_validated: bool = True
-
-    def validate(self, store: Store, ignore_extra_keys: bool = True):
-        current_schema = Schema(self.required_fields, ignore_extra_keys=ignore_extra_keys)
-
-        result = current_schema.validate(store.data)
-
-        if self.save_validated:
-            self.validated_data = Store(data=result)
-
-        return result
 
 
 class Extractor(RunnableMixin, ValidatableMixin):
@@ -35,17 +16,12 @@ class Extractor(RunnableMixin, ValidatableMixin):
     with initial parameters, and can validate input [in development]
 
     :raises: NotImplementedError
-
     """
-    def extract(self, store: Store) -> Store:
-        raise NotImplementedError
+
+    def extract(self, store: Store):
+        pass
 
     def run(self, store: Store):
-        """Interface implementation
-
-        :param store: data object passed from pipe
-
-        """
         return self.extract(store)
 
 
@@ -56,18 +32,12 @@ class Transformer(RunnableMixin, ValidatableMixin):
     Main goal - get the data, transform it and pass it next.
 
     :raises: NotImplementedError
-
     """
-    def transform(self, store: Store) -> Store:
-        raise NotImplementedError
+
+    def transform(self, store: Store):
+        pass
 
     def run(self, store: Store):
-        """Interface implementation
-
-        :param store: data object passed from pipe
-        :type store: DataObject
-
-        """
         return self.transform(store)
 
 
@@ -78,18 +48,12 @@ class Loader(RunnableMixin, ValidatableMixin):
     Main goal - get prepared data and put it to the view or storage.
 
     :raises: NotImplementedError
-
     """
+
     def load(self, store: Store):
-        raise NotImplementedError
+        pass
 
     def run(self, store: Store):
-        """Interface implementation
-
-        :param store: data object passed from pipe
-        :type store: DataObject
-
-        """
         return self.load(store)
 
 
