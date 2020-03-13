@@ -12,7 +12,6 @@ from werkzeug.wrappers import Request, Response
 
 import pipe.core.base as base
 import pipe.core.data as data
-import pipe.core.interface as interface
 import pipe.core.utils as utils
 
 __all__ = ['app']
