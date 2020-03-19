@@ -5,8 +5,10 @@ from pipe.core.base import Pipe
 from pipe.generics.helpers import TPutDefaults
 from pipe.generics.request.extract import EFormData
 
-from src.common.load import LTemplateResponse
+from src.common.load import LTemplateResponse, LGoogleSheets, LKeenEyeLinkResponse
+
 from src.jira.extract import EJiraIssues
+from src.common.transform import TSpreadsheetReady
 from src.jira.transform import TCountPercents, TFromJiraToDict
 
 
@@ -31,7 +33,10 @@ class MainPipe(Pipe):
             'out': (
                 EJiraIssues(),
                 TFromJiraToDict(),
-                TCountPercents()
+                TCountPercents(),
+                TSpreadsheetReady(),
+                LGoogleSheets(),
+                LKeenEyeLinkResponse()
             )
         }
     }

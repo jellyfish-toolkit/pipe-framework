@@ -73,7 +73,7 @@ class Pipe:
     def __init__(self, request, store_class=Store):
         self.__request = request
         self.__store_class = store_class
-        self.__shared_store: Store = self.__store_class(None)
+        self.__shared_store: t.Optional[Store] = None
 
     @property
     def store(self) -> Store:
@@ -115,7 +115,8 @@ class Pipe:
 
         return result
 
-    def __run_pipe(self, inner_pipe: t.Iterable[RunnableMixin], response: bool) -> t.Union[None, t.Any]:
+    def __run_pipe(self, inner_pipe: t.Iterable[t.Union[RunnableMixin, ValidatableMixin]], response: bool) -> t.Union[
+        None, t.Any]:
 
         result = None
 
@@ -132,7 +133,11 @@ class Pipe:
                     self.store = result
 
             if issubclass(item.__class__, Loader) and response:
+                item.validate(self.store)
                 result = item.run(self.store)
+
+                if issubclass(result.__class__, Store):
+                    self.store = result
 
         return result
 

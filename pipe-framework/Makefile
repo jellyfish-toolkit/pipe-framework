@@ -22,3 +22,11 @@ generate-tags:
 
 documentation:
 	sphinx-build -b html ./docs/src ./docs
+
+git-clean-local: git-check-on-master
+	for b in `git branch --list "feature/*" --merged`; do git branch -d "$$b"; done;
+	for b in `git branch --list "bug/*" --merged`; do git branch -d "$$b"; done;
+
+git-check-on-master:
+	@git status -b -s | grep "## master...origin/master"
+	@echo "On master"

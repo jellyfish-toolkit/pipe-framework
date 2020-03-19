@@ -23,6 +23,8 @@ class EJiraIssues(Extractor):
         self.client = jira.JIRA(base_url, basic_auth=(email, api_key), max_retries=0)
 
     def extract(self, store: Store):
+        result = dict(**store.data)
+
         self.__init_client(
             store.get('email'),
             store.get('api_key'),
@@ -41,9 +43,9 @@ class EJiraIssues(Extractor):
         issues = self.client.search_issues(search_prompt, maxResults=200,
                                            fields='worklog, created, aggregatetimeoriginalestimate')
 
-        result = {
+        result.update({
             'issues': issues,
             'user': user
-        }
+        })
 
         return Store(data=result)

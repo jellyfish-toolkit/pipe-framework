@@ -41,8 +41,7 @@ class TFromJiraToDict(Transformer):
 
 class TCountPercents(Transformer):
     required_fields = {
-        'issues': dict,
-        'user': object
+        'issues': dict
     }
 
     def __count_deviation(self, es, sp):

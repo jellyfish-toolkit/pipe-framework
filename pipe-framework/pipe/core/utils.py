@@ -54,7 +54,7 @@ def make_response(store: Store, *args, **kwargs) -> Response:
     return Response(store.data, *args, **kwargs)
 
 
-class Singleton():
+class Singleton:
 
     __instances: t.Dict = None
 
