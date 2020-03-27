@@ -1,4 +1,5 @@
 import typing as t
+from rich.console import Console
 
 from pipe.core.mixins import RunnableMixin, ValidatableMixin
 from pipe.core.data import PipeException, Store
@@ -8,7 +9,11 @@ class ExtractorException(Exception):
     pass
 
 
-class Extractor(RunnableMixin, ValidatableMixin):
+class Step(ValidatableMixin, RunnableMixin):
+    pass
+
+
+class Extractor(Step):
     """Abstract class for Extractors.
     Contains extract method which should be implemented by developer.
 
@@ -25,7 +30,7 @@ class Extractor(RunnableMixin, ValidatableMixin):
         return self.extract(store)
 
 
-class Transformer(RunnableMixin, ValidatableMixin):
+class Transformer(Step):
     """Abstract class for Transformers.
     Contains transform method which should be implemented by developer.
 
@@ -41,7 +46,7 @@ class Transformer(RunnableMixin, ValidatableMixin):
         return self.transform(store)
 
 
-class Loader(RunnableMixin, ValidatableMixin):
+class Loader(Step):
     """Abstract class for Loader.
     Contains load method which should be implemented by developer.
 
@@ -68,11 +73,13 @@ class Pipe:
 
     """
 
-    pipe_schema: t.Dict[str, t.Dict[str, t.Iterable[RunnableMixin]]] = {}
+    pipe_schema: t.Dict[str, t.Dict[str, t.Iterable[Step]]] = {}
+    __inspection_mode: bool = False
 
-    def __init__(self, request, store_class=Store):
+    def __init__(self, request, inspection, store_class=Store):
         self.__request = request
         self.__store_class = store_class
+        self.__inspection_mode = inspection
         self.__shared_store: t.Optional[Store] = None
 
     @property
@@ -98,6 +105,15 @@ class Pipe:
         """
         return self.__request
 
+    def __print_step(self, step: Step, store: Store):
+        console = Console()
+
+        console.log('Current step is -> ', step.__class__.__name__, f'({step.__module__})')
+        console.log('----------------------------------------------------------------')
+        console.log(f'''{step.__class__.__name__} store state -> 
+        ''', store.data)
+        console.log('----------------------------------------------------------------')
+
     def run_pipe(self):
         """The main method.
         Takes data and pass through pipe. Handles request and response
@@ -115,14 +131,17 @@ class Pipe:
 
         return result
 
-    def __run_pipe(self, inner_pipe: t.Iterable[t.Union[RunnableMixin, ValidatableMixin]], response: bool) -> t.Union[
+    def __run_pipe(self, inner_pipe: t.Iterable[t.Union[Step]], response: bool) -> t.Union[
         None, t.Any]:
 
         result = None
 
         for item in inner_pipe:
-            if issubclass(item.__class__, Extractor) or issubclass(item.__class__, Transformer):
 
+            if self.__inspection_mode:
+                self.__print_step(item, self.store)
+
+            if issubclass(item.__class__, Extractor) or issubclass(item.__class__, Transformer):
                 item.validate(self.store)
                 result = item.run(self.store)
 

@@ -1,7 +1,7 @@
 import typing as t
 
 from pipe.core.data import Store
-from schema import Schema
+from cerberus import Validator, TypeDefinition
 
 
 class RunnableException(Exception):
@@ -24,18 +24,25 @@ class RunnableMixin:
         """
         pass
 
+
 class ValidatableMixin:
     required_fields: dict = {}
     errors: t.Optional[list] = None
     validated_data: t.Any = None
     save_validated: bool = True
 
-    def validate(self, store: Store, ignore_extra_keys: bool = True):
-        current_schema = Schema(self.required_fields, ignore_extra_keys=ignore_extra_keys)
+    def set_custom_types(self) -> Validator:
+        object_type = TypeDefinition('object', (object,), ())
+        Validator.types_mapping['object'] = object_type
 
-        result = current_schema.validate(store.data)
+        return Validator
+
+    def validate(self, store: Store, allow_uknown: bool = True):
+
+        v = self.set_custom_types()(allow_uknown=allow_uknown, require_all=True)
+        result = v.validate(store.data, self.required_fields)
 
         if self.save_validated:
-            self.validated_data = Store(data=result)
+            self.validated_data = Store(data=v.normalized(store.data, self.required_fields))
 
         return result

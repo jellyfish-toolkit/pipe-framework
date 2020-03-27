@@ -32,6 +32,7 @@ class App:
     __static_serving: bool = False
     __static_folder: t.Optional[str] = None
     __static_url: t.Optional[str] = None
+    __inspection_mode: bool = False
 
     def path(self, route: str):
         """Decorator for adding pipe as a handler for a route
@@ -68,7 +69,7 @@ class App:
             return e(environ, start_response)
 
         for pipe in endpoint.get_pipes():
-            result = pipe(request).run_pipe()
+            result = pipe(request, self.__inspection_mode).run_pipe()
 
         if isinstance(result, Response):
             return result(environ, start_response)
@@ -105,6 +106,10 @@ class App:
             self.__static_serving = True
             self.__static_folder = static_folder
             self.__static_url = static_url
+
+        if kwargs.get('use_inspection', False):
+            self.__inspection_mode = True
+            del kwargs['use_inspection']
 
         for path, pipes in self.__paths.items():
             self.__map.add(Rule(path, endpoint=pipes))

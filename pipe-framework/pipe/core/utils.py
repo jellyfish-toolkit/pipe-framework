@@ -64,3 +64,5 @@ class Singleton:
             cls.__instances.update({name: cls(**options)})
 
         return cls.__instances.get(name)
+
+

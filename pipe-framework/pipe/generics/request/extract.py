@@ -11,12 +11,13 @@ class EFormDataException(ExtractorException):
 class EFormData(Extractor):
     method: str = 'POST'
 
-    required_fields = {'request': Request}
+    required_fields = {'request': {
+        'type': 'object'
+    }}
 
     save_validated: bool = True
 
     def extract(self, store: Store):
-
         request = self.validated_data.get('request')
 
         if request.method != self.method:
@@ -34,7 +35,6 @@ class EUrlData(Extractor):
     save_validated: bool = True
 
     def extract(self, store: Store):
-
         request = self.validated_data.get('request')
 
         result = {'args': dict(request.args)}

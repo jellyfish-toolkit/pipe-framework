@@ -1,4 +1,0 @@
-jira==2.0.0
-requests
-gspread
-oauth2client

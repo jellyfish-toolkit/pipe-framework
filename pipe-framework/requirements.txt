@@ -1,5 +1,5 @@
 werkzeug==1.0.0
 Jinja2==2.11.1
-schema==0.7.1
-validators==0.14.2
+cerberus
 PyOpenSSL
+rich
