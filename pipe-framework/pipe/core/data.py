@@ -51,9 +51,12 @@ class Store:
         return value
 
     def extend(self, store):
-        data_to_add = store.data
-        result_data = self.data
+        data_to_add = store.copy()
+        result_data = self.copy()
 
         result_data.update(data_to_add)
 
         return self.__class__(data=result_data)
+
+    def copy(self):
+        return self.data.copy()

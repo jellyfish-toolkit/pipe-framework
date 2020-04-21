@@ -11,33 +11,37 @@ class EFormDataException(ExtractorException):
 class EFormData(Extractor):
     method: str = 'POST'
 
-    required_fields = {'request': Request}
+    required_fields = {'request': {
+        'type': 'object'
+    }}
 
     save_validated: bool = True
 
     def extract(self, store: Store):
+        result = store.copy()
 
         request = self.validated_data.get('request')
 
         if request.method != self.method:
             raise EFormDataException("Invalid request method")
 
-        result = {'form': dict(request.form)}
-        result.update(store.data)
+        result.update({'form': dict(request.form)})
 
         return Store(data=result)
 
 
-class EUrlData(Extractor):
-    required_fields = {'request': Request}
+class EQueryStringData(Extractor):
+    required_fields = {'request': {
+        'type': 'object'
+    }}
 
     save_validated: bool = True
 
     def extract(self, store: Store):
+        result = store.copy()
 
         request = self.validated_data.get('request')
 
-        result = {'args': dict(request.args)}
-        result.update(store.data)
+        result.update(request.args)
 
         return Store(data=result)

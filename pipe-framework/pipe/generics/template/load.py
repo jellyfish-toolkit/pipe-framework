@@ -39,6 +39,7 @@ class LTemplateResponseBase(Loader):
 
 
 class LJinja2TemplateResponseBase(LTemplateResponseBase):
+
     def __init__(self, *args, **options):
         """Setting Jinja2 environment
 

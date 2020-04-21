@@ -1,6 +1,8 @@
 import typing as t
+from rich.console import Console
 
-from pipe.core.mixins import RunnableMixin, ValidatableMixin
+from pipe.core import PipeResponse
+from pipe.core.mixins import Runnable, ValidatableMixin
 from pipe.core.data import PipeException, Store
 
 
@@ -8,7 +10,11 @@ class ExtractorException(Exception):
     pass
 
 
-class Extractor(RunnableMixin, ValidatableMixin):
+class Step(ValidatableMixin, Runnable):
+    pass
+
+
+class Extractor(Step):
     """Abstract class for Extractors.
     Contains extract method which should be implemented by developer.
 
@@ -25,7 +31,7 @@ class Extractor(RunnableMixin, ValidatableMixin):
         return self.extract(store)
 
 
-class Transformer(RunnableMixin, ValidatableMixin):
+class Transformer(Step):
     """Abstract class for Transformers.
     Contains transform method which should be implemented by developer.
 
@@ -41,7 +47,7 @@ class Transformer(RunnableMixin, ValidatableMixin):
         return self.transform(store)
 
 
-class Loader(RunnableMixin, ValidatableMixin):
+class Loader(Step):
     """Abstract class for Loader.
     Contains load method which should be implemented by developer.
 
@@ -68,12 +74,14 @@ class Pipe:
 
     """
 
-    pipe_schema: t.Dict[str, t.Dict[str, t.Iterable[RunnableMixin]]] = {}
+    pipe_schema: t.Dict[str, t.Dict[str, t.Iterable[Step]]] = {}
+    __inspection_mode: bool = False
 
-    def __init__(self, request, store_class=Store):
+    def __init__(self, request, values, inspection, store_class=Store):
         self.__request = request
         self.__store_class = store_class
-        self.__shared_store: Store = self.__store_class(None)
+        self.__inspection_mode = inspection
+        self.__shared_store: t.Optional[Store] = self.__store_class(values)
 
     @property
     def store(self) -> Store:
@@ -98,6 +106,15 @@ class Pipe:
         """
         return self.__request
 
+    def __print_step(self, step: Step, store: Store):
+        console = Console()
+
+        console.log('Current step is -> ', step.__class__.__name__, f'({step.__module__})')
+        console.log('----------------------------------------------------------------')
+        console.log(f'''{step.__class__.__name__} store state -> 
+        ''', store.data)
+        console.log('----------------------------------------------------------------')
+
     def run_pipe(self):
         """The main method.
         Takes data and pass through pipe. Handles request and response
@@ -106,7 +123,7 @@ class Pipe:
 
         """
 
-        self.store = self.__store_class({'request': self.request})
+        self.store = self.store.extend(self.__store_class({'request': self.request}))
 
         pipe_to_run = self.pipe_schema.get(self.request.method, {'in': (), 'out': ()})
 
@@ -115,11 +132,16 @@ class Pipe:
 
         return result
 
-    def __run_pipe(self, inner_pipe: t.Iterable[RunnableMixin], response: bool) -> t.Union[None, t.Any]:
+    def __run_pipe(self, inner_pipe: t.Iterable[t.Union[Step]], response: bool) -> t.Union[
+        None, t.Any]:
 
         result = None
 
         for item in inner_pipe:
+
+            if self.__inspection_mode:
+                self.__print_step(item, self.store)
+
             if issubclass(item.__class__, Extractor) or issubclass(item.__class__, Transformer):
 
                 item.validate(self.store)
@@ -132,7 +154,14 @@ class Pipe:
                     self.store = result
 
             if issubclass(item.__class__, Loader) and response:
+                item.validate(self.store)
                 result = item.run(self.store)
+
+                if issubclass(result.__class__, PipeResponse) or isinstance(result, PipeResponse):
+                    return result
+
+                if issubclass(result.__class__, Store):
+                    self.store = result
 
         return result
 

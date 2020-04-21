@@ -1,10 +1,17 @@
+import json
 import typing as t
 from dataclasses import dataclass, field
+from datetime import datetime
 
-from werkzeug.wrappers import Response
-
+from pipe.core import PipeResponse
 from pipe.core.base import Pipe
 from pipe.core.data import Store
+
+
+class PipeJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return str(obj)
 
 
 @dataclass
@@ -41,7 +48,7 @@ class PipeList:
         return hash(self.__str__())
 
 
-def make_response(store: Store, *args, **kwargs) -> Response:
+def make_response(store: Store, is_json=False, *args, **kwargs) -> PipeResponse:
     """Makes WSGI Response from DataObject
 
     :param store: Store with response data
@@ -49,18 +56,31 @@ def make_response(store: Store, *args, **kwargs) -> Response:
     :return: WSGI Response
     :rtype: Response
     """
+    if is_json:
+        data = json.dumps(store.data, cls=PipeJsonEncoder)
+        return PipeResponse(data, content_type='application/json', *args, **kwargs)
+    else:
+        return PipeResponse(store.data, *args, **kwargs)
 
-    # TODO: Ugly, change data to another name
-    return Response(store.data, *args, **kwargs)
+
+class SingletonMeta(type):
+    __instance: t.Optional[object] = None
+
+    def __call__(cls, **options):
+        if cls.__instance is None:
+            cls.__instance = cls(**options)
+
+        return cls.__instance
 
 
-class Singleton():
+def configure(config):
+    def decorator(wrapped):
+        def wrapper(*args, **kwargs):
+            for key, value in config.items():
+                setattr(wrapped, key, value)
 
-    __instances: t.Dict = None
+            return wrapped(*args, **kwargs)
 
-    @classmethod
-    def instance(cls, name, **options):
-        if cls.__instances.get(name, None) is None:
-            cls.__instances.update({name: cls(**options)})
+        return wrapper
 
-        return cls.__instances.get(name)
+    return decorator
