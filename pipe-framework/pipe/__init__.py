@@ -12,5 +12,3 @@ Not related to the Silicon Valley TV show.
 
 In deep development. Do not use!
 """
-
-import pipe.core as core  # noqa: F401

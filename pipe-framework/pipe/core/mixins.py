@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 import typing as t
 
+from typeguard import typechecked
+
 from pipe.core.data import Store
 from cerberus import Validator, TypeDefinition
 
@@ -9,11 +11,11 @@ class RunnableException(Exception):
     pass
 
 
+@typechecked
 class Runnable(ABC):
     """Interface for every pipe element.
     Loader, Transformer and Extractor should implement
     run method to easily go through pipe.
-
     """
 
     @abstractmethod
@@ -26,13 +28,14 @@ class Runnable(ABC):
         """
         pass
 
+@typechecked
 class ValidatableMixin:
     required_fields: dict = {}
     errors: t.Optional[list] = None
     validated_data: t.Any = None
     save_validated: bool = True
 
-    def set_custom_types(self) -> Validator:
+    def set_custom_types(self) -> t.Type[Validator]:
         object_type = TypeDefinition('object', (object,), ())
         Validator.types_mapping['object'] = object_type
 

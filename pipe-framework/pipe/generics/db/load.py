@@ -1,11 +1,14 @@
 import copy
 import typing as t
 
+from typeguard import typechecked
+
 from pipe.core.base import Loader
 from pipe.core.data import Store
 from pipe.generics.db.utils import DatabaseBaseMixin, CreateUpdateMixin, DeleteMixin
 
 
+@typechecked
 class LDBInsertUpdateBase(Loader, DatabaseBaseMixin, CreateUpdateMixin):
 
     def __init__(self, hard_update: bool = False, *args, **kwargs):
@@ -22,7 +25,7 @@ class LDBInsertUpdateBase(Loader, DatabaseBaseMixin, CreateUpdateMixin):
         """
         data = store.copy()
 
-        data_to_load = data.get(self.data_field_name)
+        data_to_load = data.get(self.data_field)
         update = self.pk_field in data_to_load
 
         if update:
@@ -40,6 +43,7 @@ class LDBInsertUpdateBase(Loader, DatabaseBaseMixin, CreateUpdateMixin):
         return Store(data)
 
 
+@typechecked
 class LDatabaseDeleteBase(Loader, DatabaseBaseMixin, DeleteMixin):
 
     def load(self, store: Store) -> Store:

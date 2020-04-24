@@ -7,6 +7,9 @@ from pipe.core.data import Store
 
 @dataclass
 class TJsonResponseReady(Transformer):
+    """
+    Converts object from a 'data_field' for a simpliest API representation
+    """
     data_field: t.Optional[str] = None
     response_template: dict = field(default_factory=dict)
 

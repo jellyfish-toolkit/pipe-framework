@@ -1,5 +1,6 @@
 import typing as t
 from rich.console import Console
+from typeguard import typechecked
 
 from pipe.core import PipeResponse
 from pipe.core.mixins import Runnable, ValidatableMixin
@@ -14,6 +15,7 @@ class Step(ValidatableMixin, Runnable):
     pass
 
 
+@typechecked
 class Extractor(Step):
     """Abstract class for Extractors.
     Contains extract method which should be implemented by developer.
@@ -31,6 +33,7 @@ class Extractor(Step):
         return self.extract(store)
 
 
+@typechecked
 class Transformer(Step):
     """Abstract class for Transformers.
     Contains transform method which should be implemented by developer.
@@ -47,6 +50,7 @@ class Transformer(Step):
         return self.transform(store)
 
 
+@typechecked
 class Loader(Step):
     """Abstract class for Loader.
     Contains load method which should be implemented by developer.
@@ -55,7 +59,6 @@ class Loader(Step):
 
     :raises: NotImplementedError
     """
-
     def load(self, store: Store):
         pass
 
@@ -63,6 +66,7 @@ class Loader(Step):
         return self.load(store)
 
 
+@typechecked
 class Pipe:
     """Main structure in the framework. Represent pipe through which all data pass.
 
@@ -127,12 +131,12 @@ class Pipe:
 
         pipe_to_run = self.pipe_schema.get(self.request.method, {'in': (), 'out': ()})
 
-        self.__run_pipe(pipe_to_run.get('in', ()), response=False)
-        result = self.__run_pipe(pipe_to_run.get('out', ()), response=True)
+        self.__run_pipe(pipe_to_run.get('in', ()))
+        result = self.__run_pipe(pipe_to_run.get('out', ()))
 
         return result
 
-    def __run_pipe(self, inner_pipe: t.Iterable[t.Union[Step]], response: bool) -> t.Union[
+    def __run_pipe(self, inner_pipe: t.Iterable[t.Union[Step]]) -> t.Union[
         None, t.Any]:
 
         result = None
@@ -153,7 +157,8 @@ class Pipe:
                 else:
                     self.store = result
 
-            if issubclass(item.__class__, Loader) and response:
+            if issubclass(item.__class__, Loader):
+
                 item.validate(self.store)
                 result = item.run(self.store)
 

@@ -1,9 +1,9 @@
-"""Main module of the framework
+"""WSGI App for http related Pipes
 
 """
 import typing as t
-from dataclasses import dataclass
 
+from typeguard import typechecked
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.shared_data import SharedDataMiddleware
 from werkzeug.routing import Map, Rule
@@ -12,49 +12,31 @@ from pipe.core.wrappers import PipeRequest, PipeResponse
 
 import pipe.core.base as base
 import pipe.core.data as data
-import pipe.core.utils as utils
 
-__all__ = ['app']
+__all__ = ['app', 'path']
 
 
 class AppException(Exception):
     pass
 
 
-@dataclass
+@typechecked
 class App:
     """Main WSGI app wrapper which run pipes according to request
 
     """
 
-    __paths: t.Dict[str, t.List[base.Pipe]] = None
+    paths: data.Store = data.Store({})
+
     __map: Map = Map()
     __static_serving: bool = False
     __static_folder: t.Optional[str] = None
     __static_url: t.Optional[str] = None
     __inspection_mode: bool = False
 
-    def path(self, route: str):
-        """Decorator for adding pipe as a handler for a route
-
-        :param route: Werkzeug formatted route
-        :type route: string
-        """
-        def decorator(pipe):
-
-            # TODO: a bit ugly, refactoring required
-            if self.__paths is None:
-                pipe_list = utils.PipeList()
-                self.__paths = {route: pipe_list}
-            elif not self.__paths.get(route, False):
-                pipe_list = utils.PipeList()
-                self.__paths.update({route: pipe_list})
-            else:
-                pipe_list = self.__paths.get(route)
-
-            pipe_list.add(pipe)
-
-        return decorator
+    def __init__(self):
+        for path, pipes in self.paths.data.items():
+            self.__map.add(Rule(path, endpoint=pipes))
 
     def wsgi_app(self, environ, start_response):
         """Main WSGI app, see werkzeug documentation for more
@@ -87,20 +69,30 @@ class App:
             return self.wsgi_app(environ, start_response)
 
     def run(
-        self,
-        host: str = '127.0.0.1',
-        port: int = 8000,
-        static_folder: t.Optional[str] = None,
-        static_url: str = '/static',
-        *args,
-        **kwargs
+            self,
+            host: str = '127.0.0.1',
+            port: int = 8000,
+            static_folder: t.Optional[str] = None,
+            static_url: str = '/static',
+            *args,
+            **kwargs
     ):
         """Method for running application, actually pretty similar to the Flask run method
 
         :param host: which host use for serving, defaults to '127.0.0.1'
         :type host: str, optional
+
         :param port: which port to listen, defaults to 8000
         :type port: int, optional
+
+        :param static_folder: points to the folder with the static files, for serving
+        :type static_folder: str, optional
+
+        :param static_url: on what endpoint app should serve static files
+        :type static_url: str
+
+        :param use_inspection: Toggle on inspection mode of the framework
+       :type use_inspection: bool
         """
 
         if static_folder is not None:
@@ -112,10 +104,27 @@ class App:
             self.__inspection_mode = True
             del kwargs['use_inspection']
 
-        for path, pipes in self.__paths.items():
-            self.__map.add(Rule(path, endpoint=pipes))
-
         run_simple(host, port, self, *args, **kwargs)
 
+
+def path(route: str):
+    """Decorator for adding pipe as a handler for a route
+
+    :param route: Werkzeug formatted route
+    :type route: string
+    """
+
+    def decorator(pipe):
+
+        current_pipes = App.paths.get(route, None)
+
+        if current_pipes is None:
+            current_pipes = (pipe,)
+        else:
+            current_pipes = current_pipes + (pipe,)
+
+        App.paths = App.paths.extend({route: current_pipes})
+
+    return decorator
 
 app = App()

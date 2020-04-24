@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from pipe.core.base import Transformer
 from pipe.core.data import Store
@@ -7,7 +6,9 @@ from pipe.core.data import Store
 
 @dataclass
 class TPutDefaults(Transformer):
-
+        """
+        Helper transformers, which puts values from defaults into Store
+        """
         defaults: dict
         field_name: str
 

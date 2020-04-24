@@ -1,5 +1,7 @@
 import typing as t
 
+from typeguard import typechecked
+
 
 class StoreException(Exception):
     pass
@@ -9,12 +11,13 @@ class PipeException(Exception):
     pass
 
 
+@typechecked
 class Store:
     """Data representation which go through the pipe
 
     :raises: StoreException
     """
-    def __init__(self, data: t.Any = None):
+    def __init__(self, data: t.Any = None) -> t.NoReturn:
         self.__data = data
 
     @property
@@ -27,7 +30,7 @@ class Store:
         return self.__data
 
     @data.setter
-    def data(self, data: t.Any = None):
+    def data(self, data: t.Optional[t.Any] = None) -> t.NoReturn:
         """ I don't know why, but I do not allow mutate object
 
         :param data: defaults to None
@@ -36,7 +39,7 @@ class Store:
         """
         raise StoreException("You can't mutate Store instance")
 
-    def get(self, key: str, default: t.Optional[t.Any] = None):
+    def get(self, key: str, default: t.Optional[t.Any] = None) -> t.Any:
         """Getter for data
 
         :param key:

@@ -7,6 +7,9 @@ from pipe.core.utils import make_response
 
 @dataclass
 class LJsonResponse(Loader):
+    """
+    Creates JSON response from field in 'data_field' property
+    """
     data_field = 'response'
 
     def load(self, store: Store):

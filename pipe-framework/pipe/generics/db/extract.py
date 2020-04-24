@@ -1,10 +1,11 @@
-import copy
+from typeguard import typechecked
 
 from pipe.core.base import Extractor
 from pipe.core.data import Store
 from pipe.generics.db.utils import DatabaseBaseMixin, ReadMixin
 
 
+@typechecked
 class EDBReadBase(Extractor, DatabaseBaseMixin, ReadMixin):
 
     def extract(self, store: Store):

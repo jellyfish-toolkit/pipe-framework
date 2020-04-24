@@ -3,6 +3,8 @@ import typing as t
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from typeguard import typechecked
+
 from pipe.core import PipeResponse
 from pipe.core.base import Pipe
 from pipe.core.data import Store
@@ -16,11 +18,12 @@ class PipeJsonEncoder(json.JSONEncoder):
 
 @dataclass
 class PipeList:
-    """Replacement for built-in list, provides making a string from list of Pipes for storing list of Pipes in Werkzeug Map as endpoint
-
+    """
+    Replacement for built-in list, provides making a string
+    from list of Pipes for storing list of Pipes in Werkzeug Map as endpoint
     """
 
-    __pipes: list = field(default_factory=list)
+    __pipes: set = field(default_factory=set)
 
     def add(self, pipe: Pipe) -> t.List[Pipe]:
         """Add pipe to the list
@@ -44,11 +47,13 @@ class PipeList:
     def __str__(self):
         return '_'.join([str(pipe) for pipe in self.__pipes])
 
+    # TODO: figure out better way to do this
     def __hash__(self):
         return hash(self.__str__())
 
 
-def make_response(store: Store, is_json=False, *args, **kwargs) -> PipeResponse:
+@typechecked
+def make_response(store: Store, is_json: bool = False, *args, **kwargs) -> PipeResponse:
     """Makes WSGI Response from DataObject
 
     :param store: Store with response data
@@ -61,16 +66,6 @@ def make_response(store: Store, is_json=False, *args, **kwargs) -> PipeResponse:
         return PipeResponse(data, content_type='application/json', *args, **kwargs)
     else:
         return PipeResponse(store.data, *args, **kwargs)
-
-
-class SingletonMeta(type):
-    __instance: t.Optional[object] = None
-
-    def __call__(cls, **options):
-        if cls.__instance is None:
-            cls.__instance = cls(**options)
-
-        return cls.__instance
 
 
 def configure(config):

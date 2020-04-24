@@ -9,6 +9,9 @@ from pipe.core.utils import make_response
 
 
 class LTemplateResponseBase(Loader):
+    """
+    Base class for all template loaders
+    """
     context_field: str = 'context'
     template_folder: t.Optional[str] = None
     template_name: t.Optional[str] = None
@@ -39,12 +42,9 @@ class LTemplateResponseBase(Loader):
 
 
 class LJinja2TemplateResponseBase(LTemplateResponseBase):
-
     def __init__(self, *args, **options):
         """Setting Jinja2 environment
-
         you can provide any options you can find in Jinja2 documentation.
-
         By default we setting only loader and autoescape, but you can rewrite it too.
         """
 
@@ -53,13 +53,6 @@ class LJinja2TemplateResponseBase(LTemplateResponseBase):
         self.environ = jinja2.Environment(loader=loader, autoescape=autoescape, **options)
 
     def load(self, store: Store) -> Response:
-        """load
-
-        :param store: Store from Pipe
-        :type store: Store
-        :return: Werkzeug Response with template
-        :rtype: Response
-        """
         context = store.get(self.get_context_field(), {})
         template = self.environ.get_template(self.get_template_name())
 

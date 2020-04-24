@@ -9,6 +9,9 @@ class EFormDataException(ExtractorException):
 
 
 class EFormData(Extractor):
+    """
+    Generic extractor for form data from PipeRequest
+    """
     method: str = 'POST'
 
     required_fields = {'request': {
@@ -31,6 +34,9 @@ class EFormData(Extractor):
 
 
 class EQueryStringData(Extractor):
+    """
+    Generic extractor for data from query string which you can find after ? sign in URL
+    """
     required_fields = {'request': {
         'type': 'object'
     }}
@@ -43,5 +49,20 @@ class EQueryStringData(Extractor):
         request = self.validated_data.get('request')
 
         result.update(request.args)
+
+        return Store(data=result)
+
+
+class EJsonBody(Extractor):
+    required_fields = {'request': {
+        'type': 'object'
+    }}
+
+    def extract(self, store: Store):
+        result = store.copy()
+
+        request = store.get('request')
+
+        result.update({'json': request.json})
 
         return Store(data=result)
