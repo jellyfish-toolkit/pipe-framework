@@ -1,5 +1,6 @@
 werkzeug==1.0.1
 Jinja2==2.11.2
-frozendict
-orator
-rich
+frozendict==1.2
+orator==0.9.9
+rich==5.2.1
+valideer==0.4.2

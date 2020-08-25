@@ -8,10 +8,25 @@ from valideer import ValidationError
 from pipe.core.exceptions import PipeException
 
 
-class SummedStep:
+class Step(ABC):
 
+    @abstractmethod
+    def run(self, store: frozendict):
+        pass
+
+
+
+class CombinedStep(ABC):
     def __init__(self, obj_a, obj_b):
         self.obj_a, self.obj_b = obj_a, obj_b
+
+    @abstractmethod
+    def run(self, store: frozendict):
+        pass
+
+
+
+class OrStep(CombinedStep):
 
     def run(self, store: frozendict):
 
@@ -21,13 +36,6 @@ class SummedStep:
             result = self.obj_b.run(store)
 
         return result
-
-
-class Step(ABC):
-
-    @abstractmethod
-    def run(self, store: frozendict):
-        pass
 
 
 class Extractor(Step):
@@ -134,7 +142,7 @@ class BasePipe:
     def before_pipe(self, store: t.Mapping) -> t.NoReturn:
         pass
 
-    def after_pipe(self, stor: t.Mappinge) -> t.NoReturn:
+    def after_pipe(self, stor: t.Mapping) -> t.NoReturn:
         pass
 
     def should_return(self, result: t.Mapping):
