@@ -25,6 +25,10 @@ class LJsonResponse(Loader):
                              status=store.get(self.status_field, 200))
 
 
+@validate({
+    '+{data_field}': valideer.Type(t.Union[t.Dict, t.List])
+})
+@dataclass
 class LResponse(Loader):
     """
     Sends plain response from datafield, with status from field status
@@ -33,4 +37,4 @@ class LResponse(Loader):
     status_field = 'status'
 
     def load(self, store: frozendict):
-        return make_response(store.get(self.data_field), status=store.get(self.status_field))
+        return make_response(store.get(self.data_field), status=store.get(self.status_field, 200))

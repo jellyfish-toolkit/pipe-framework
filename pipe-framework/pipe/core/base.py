@@ -1,16 +1,16 @@
 import typing as t
+from abc import ABC, abstractmethod
 
 from frozendict import frozendict
 from rich.console import Console
 from valideer import ValidationError
 
-from pipe.core.abstract import Runnable
 from pipe.core.exceptions import PipeException
 
 
-class SummedStep():
+class SummedStep:
 
-    def __init__(self, obj_a: Step, obj_b: Step):
+    def __init__(self, obj_a, obj_b):
         self.obj_a, self.obj_b = obj_a, obj_b
 
     def run(self, store: frozendict):
@@ -23,8 +23,11 @@ class SummedStep():
         return result
 
 
-class Step(Runnable):
-    pass
+class Step(ABC):
+
+    @abstractmethod
+    def run(self, store: frozendict):
+        pass
 
 
 class Extractor(Step):
@@ -79,14 +82,13 @@ class Loader(Step):
 class BasePipe:
     __inspection_mode: bool
 
-    def __init__(self, initial, inspection=False, store_class=frozendict):
+    def __init__(self, initial, inspection: bool = False):
         self.__inspection_mode = inspection
-        self.__store_class = store_class
-        self.store = self.__store_class(initial)
+        self.store = frozendict(initial)
 
         self.before_pipe(self.store)
 
-    def set_inspection(self, enable=True):
+    def set_inspection(self, enable: bool = True):
         self.__inspection_mode = enable
 
     def __print_step(self, step: Step, store: frozendict):
@@ -129,13 +131,13 @@ class BasePipe:
         self.after_pipe(self.store)
         return self.store
 
-    def before_pipe(self, store) -> t.NoReturn:
+    def before_pipe(self, store: t.Mapping) -> t.NoReturn:
         pass
 
-    def after_pipe(self, store) -> t.NoReturn:
+    def after_pipe(self, stor: t.Mappinge) -> t.NoReturn:
         pass
 
-    def should_return(self, result):
+    def should_return(self, result: t.Mapping):
         return False
 
     def __str__(self):
@@ -143,7 +145,7 @@ class BasePipe:
 
 
 class NamedPipe(BasePipe):
-    pipe_schema: t.Dict[str, t.Iterable[Step]] = {}
+    pipe_schema: t.Dict[str, t.Iterable[Step]]
 
     def run_pipe(self, name: str):
         pipe_to_run = self.pipe_schema.get(name, ())
