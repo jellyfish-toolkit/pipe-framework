@@ -1,15 +1,18 @@
-from typeguard import typechecked
+import valideer
+from frozendict import frozendict
 
 from pipe.core.base import Extractor
-from pipe.core.data import Store
-from pipe.generics.db.utils import DatabaseBaseMixin, ReadMixin
+from pipe.core.decorators import validate
+from pipe.generics.db.orator_orm.mixins import DatabaseBaseMixin, ReadMixin
 
 
-@typechecked
+@validate({
+    '+{table_name}': valideer.Type(str),
+    '+{data_field}': valideer.Type(str)
+})
 class EDBReadBase(Extractor, DatabaseBaseMixin, ReadMixin):
 
-    def extract(self, store: Store):
-        data = store.copy()
+    def extract(self, store: frozendict):
         pk = store.get(self.pk_field, False)
 
         if pk:
@@ -18,15 +21,12 @@ class EDBReadBase(Extractor, DatabaseBaseMixin, ReadMixin):
             result = self.select()
 
         if not pk and result is not None:
-            data.update({
+            store = store.copy(**{
                 f'{self.table_name}_list': [dict(item) for item in result]
             })
         elif pk and result is not None:
-            data.update({
+            store = store.copy(**{
                 f'{self.table_name}_item': dict(result)
             })
 
-        if self.one_shot:
-            self.clear_connection()
-
-        return Store(data)
+        return store

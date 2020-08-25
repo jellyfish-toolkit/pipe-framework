@@ -1,21 +1,32 @@
 import typing as t
+
+from frozendict import frozendict
 from rich.console import Console
-from typeguard import typechecked
+from valideer import ValidationError
 
-from pipe.core import PipeResponse
-from pipe.core.mixins import Runnable, ValidatableMixin
-from pipe.core.data import PipeException, Store
+from pipe.core.abstract import Runnable
+from pipe.core.exceptions import PipeException
 
 
-class ExtractorException(Exception):
+class SummedStep():
+
+    def __init__(self, obj_a: Step, obj_b: Step):
+        self.obj_a, self.obj_b = obj_a, obj_b
+
+    def run(self, store: frozendict):
+
+        try:
+            result = self.obj_a.run(store)
+        except ValidationError:
+            result = self.obj_b.run(store)
+
+        return result
+
+
+class Step(Runnable):
     pass
 
 
-class Step(ValidatableMixin, Runnable):
-    pass
-
-
-@typechecked
 class Extractor(Step):
     """Abstract class for Extractors.
     Contains extract method which should be implemented by developer.
@@ -26,14 +37,13 @@ class Extractor(Step):
     :raises: NotImplementedError
     """
 
-    def extract(self, store: Store):
+    def extract(self, store: frozendict):
         pass
 
-    def run(self, store: Store):
+    def run(self, store: frozendict):
         return self.extract(store)
 
 
-@typechecked
 class Transformer(Step):
     """Abstract class for Transformers.
     Contains transform method which should be implemented by developer.
@@ -43,14 +53,13 @@ class Transformer(Step):
     :raises: NotImplementedError
     """
 
-    def transform(self, store: Store):
+    def transform(self, store: frozendict):
         pass
 
-    def run(self, store: Store):
+    def run(self, store: frozendict):
         return self.transform(store)
 
 
-@typechecked
 class Loader(Step):
     """Abstract class for Loader.
     Contains load method which should be implemented by developer.
@@ -59,116 +68,83 @@ class Loader(Step):
 
     :raises: NotImplementedError
     """
-    def load(self, store: Store):
+
+    def load(self, store: frozendict):
         pass
 
-    def run(self, store: Store):
+    def run(self, store: frozendict):
         return self.load(store)
 
 
-@typechecked
-class Pipe:
-    """Main structure in the framework. Represent pipe through which all data pass.
+class BasePipe:
+    __inspection_mode: bool
 
-    Pipe structure. Contains two parts - pipe for request
-    and pipe for response.
-    Data goes in next way
-    request -> request extractor -> request transformer -> request loader ->
-    response extractor -> response transformer -> response loader
-
-    """
-
-    pipe_schema: t.Dict[str, t.Dict[str, t.Iterable[Step]]] = {}
-    __inspection_mode: bool = False
-
-    def __init__(self, request, values, inspection, store_class=Store):
-        self.__request = request
-        self.__store_class = store_class
+    def __init__(self, initial, inspection=False, store_class=frozendict):
         self.__inspection_mode = inspection
-        self.__shared_store: t.Optional[Store] = self.__store_class(values)
+        self.__store_class = store_class
+        self.store = self.__store_class(initial)
 
-    @property
-    def store(self) -> Store:
-        """Getter for inner data object
-        """
-        return self.__shared_store
+        self.before_pipe(self.store)
 
-    @store.setter
-    def store(self, store: Store):
-        """Setter for data object
+    def set_inspection(self, enable=True):
+        self.__inspection_mode = enable
 
-        :param store:
-        :type store: Store
-
-        """
-        self.__shared_store = self.__store_class(store.data)
-
-    @property
-    def request(self):
-        """Getter for request object
-
-        """
-        return self.__request
-
-    def __print_step(self, step: Step, store: Store):
+    def __print_step(self, step: Step, store: frozendict):
         console = Console()
 
         console.log('Current step is -> ', step.__class__.__name__, f'({step.__module__})')
+        console.log(f'{step.__class__.__name__} STORE STATE')
         console.log('----------------------------------------------------------------')
-        console.log(f'''{step.__class__.__name__} store state -> 
-        ''', store.data)
+        console.log(store)
         console.log('----------------------------------------------------------------')
+        console.log('\n\n')
 
-    def run_pipe(self):
-        """The main method.
-        Takes data and pass through pipe. Handles request and response
-
-        :raises: PipeException
-
-        """
-
-        self.store = self.store.extend(self.__store_class({'request': self.request}))
-
-        pipe_to_run = self.pipe_schema.get(self.request.method, {'in': (), 'out': ()})
-
-        self.__run_pipe(pipe_to_run.get('in', ()))
-        result = self.__run_pipe(pipe_to_run.get('out', ()))
-
-        return result
-
-    def __run_pipe(self, inner_pipe: t.Iterable[t.Union[Step]]) -> t.Union[
+    def _run_pipe(self, pipe: t.Iterable[Step]) -> t.Union[
         None, t.Any]:
 
-        result = None
-
-        for item in inner_pipe:
+        for item in pipe:
 
             if self.__inspection_mode:
                 self.__print_step(item, self.store)
 
             if issubclass(item.__class__, Extractor) or issubclass(item.__class__, Transformer):
-
-                item.validate(self.store)
                 result = item.run(self.store)
 
-                if result is None or not issubclass(Store, result.__class__):
-                    raise PipeException("Transformer and Extractor should always return a Store"  # noqa: E501
-                                        )
+                if result is None or not issubclass(frozendict, result.__class__):
+                    raise PipeException(
+                        'Transformer and Extractor should always return a frozendict')  # noqa: E501
                 else:
                     self.store = result
 
             if issubclass(item.__class__, Loader):
-
-                item.validate(self.store)
                 result = item.run(self.store)
 
-                if issubclass(result.__class__, PipeResponse) or isinstance(result, PipeResponse):
+                if self.should_return(result):
+                    self.after_pipe(self.store)
                     return result
 
-                if issubclass(result.__class__, Store):
+                if issubclass(result.__class__, frozendict) or isinstance(result, frozendict):
                     self.store = result
 
-        return result
+        self.after_pipe(self.store)
+        return self.store
+
+    def before_pipe(self, store) -> t.NoReturn:
+        pass
+
+    def after_pipe(self, store) -> t.NoReturn:
+        pass
+
+    def should_return(self, result):
+        return False
 
     def __str__(self):
         return self.__class__.__name__
+
+
+class NamedPipe(BasePipe):
+    pipe_schema: t.Dict[str, t.Iterable[Step]] = {}
+
+    def run_pipe(self, name: str):
+        pipe_to_run = self.pipe_schema.get(name, ())
+        return self._run_pipe(pipe_to_run)

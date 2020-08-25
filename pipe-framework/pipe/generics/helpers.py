@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
+from frozendict import frozendict
+
 from pipe.core.base import Transformer
-from pipe.core.data import Store
 
 
 @dataclass
@@ -12,9 +13,8 @@ class TPutDefaults(Transformer):
         defaults: dict
         field_name: str
 
-        def transform(self, store: Store) -> Store:
-
-            field = store.get(self.field_name)
-            field.update(self.defaults)
-
-            return Store(data=field)
+        def transform(self, store: frozendict) -> frozendict:
+            store = store.copy(**{
+                self.field_name: self.defaults
+            })
+            return store

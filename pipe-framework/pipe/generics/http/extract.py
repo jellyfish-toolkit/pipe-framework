@@ -1,68 +1,54 @@
-from werkzeug.wrappers import Request
-
-from pipe.core.base import Extractor, ExtractorException
-from pipe.core.data import Store
-
-
-class EFormDataException(ExtractorException):
-    pass
+import valideer
+from frozendict import frozendict
+from pipe.core.base import Extractor
+from pipe.core.decorators import validate
+from pipe.generics.http.exceptions import EFormDataException
+from pipe.server.wrappers import PipeRequest
 
 
+@validate({
+    '+{request_field}': valideer.Type(PipeRequest)
+})
 class EFormData(Extractor):
     """
     Generic extractor for form data from PipeRequest
     """
+    request_field = 'request'
     method: str = 'POST'
 
-    required_fields = {'request': {
-        'type': 'object'
-    }}
-
-    save_validated: bool = True
-
-    def extract(self, store: Store):
-        result = store.copy()
-
-        request = self.validated_data.get('request')
-
+    def extract(self, store: frozendict):
+        request = store.get(self.request_field)
         if request.method != self.method:
             raise EFormDataException("Invalid request method")
-
-        result.update({'form': dict(request.form)})
-
-        return Store(data=result)
+        store = store.copy(**{'form': dict(request.form)})
+        return store
 
 
+@validate({
+    '+{request_field}': valideer.Type(PipeRequest)
+})
 class EQueryStringData(Extractor):
     """
     Generic extractor for data from query string which you can find after ? sign in URL
     """
-    required_fields = {'request': {
-        'type': 'object'
-    }}
+    request_field = 'request'
 
-    save_validated: bool = True
-
-    def extract(self, store: Store):
-        result = store.copy()
-
-        request = self.validated_data.get('request')
-
-        result.update(request.args)
-
-        return Store(data=result)
-
-
-class EJsonBody(Extractor):
-    required_fields = {'request': {
-        'type': 'object'
-    }}
-
-    def extract(self, store: Store):
-        result = store.copy()
-
+    def extract(self, store: frozendict):
         request = store.get('request')
+        store = store.copy(**request.args)
+        return store
 
-        result.update({'json': request.json})
 
-        return Store(data=result)
+@validate({
+    '+{request_field}': valideer.Type(PipeRequest)
+})
+class EJsonBody(Extractor):
+    """
+    Generic extractor for data which came in JSON format
+    """
+    request_field = 'request'
+
+    def extract(self, store: frozendict):
+        request = store.get('request')
+        store = store.copy(**{'json': request.json})
+        return store

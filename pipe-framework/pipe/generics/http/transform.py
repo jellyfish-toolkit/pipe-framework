@@ -1,31 +1,28 @@
 import typing as t
+from collections import defaultdict
 from dataclasses import dataclass, field
 
+import valideer
+from frozendict import frozendict
+
 from pipe.core.base import Transformer
-from pipe.core.data import Store
+from pipe.core.decorators import validate
 
 
+@validate({
+    '+{data_field}': valideer.Type(t.Union[t.Dict, t.List])
+})
 @dataclass
 class TJsonResponseReady(Transformer):
     """
     Converts object from a 'data_field' for a simpliest API representation
     """
-    data_field: t.Optional[str] = None
-    response_template: dict = field(default_factory=dict)
+    data_field: t.Union[t.Dict, t.List]
 
-    def transform(self, store: Store) -> Store:
-        self.required_fields = {
-            self.data_field: {
-                'type': 'object'
-            }
-        }
-        self.validate(store)
+    def transform(self, store: frozendict) -> frozendict:
+        response_data = store.get(self.data_field)
 
-        data = store.data.copy()
-
-        response_data = data.get(self.data_field)
-
-        result = self.response_template.copy()
+        result = defaultdict()
 
         if isinstance(response_data, list):
             result['count'] = len(response_data)
@@ -33,6 +30,6 @@ class TJsonResponseReady(Transformer):
         else:
             result = response_data
 
-        data.update({'response': result})
+        store = store.copy(**{'response': result})
 
-        return Store(data)
+        return store

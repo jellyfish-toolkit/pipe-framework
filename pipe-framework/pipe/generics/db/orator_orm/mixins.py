@@ -2,32 +2,24 @@ import copy
 import typing as t
 
 from orator import DatabaseManager
-from typeguard import typechecked
 
 
-@typechecked
 class DatabaseBaseMixin:
     """
     Generic mixin for all Steps related to Database
     """
-    connection_config: t.Optional[t.Dict[str, str]] = None
-    data_field: str = 'data'
-    pk_field: str = 'id'
-    one_shot: bool = True
-    table_name: t.Optional[str] = None
+    connection_config: t.Dict[str, str]
     __db = None
     query = None
 
     def __init__(self, table_name: t.Optional[str] = None, data_field: t.Optional[str] = None,
                  pk_field: str = 'id',
                  where: t.Optional[tuple] = None, join: t.Optional[tuple] = None,
-                 select: t.Optional[tuple] = None,
-                 one_shot: bool = True):
+                 select: t.Optional[tuple] = None):
 
-        self.data_field = data_field
-        self.table_name = table_name
-        self.pk_field = pk_field
-        self.one_shot = one_shot
+        self.data_field = data_field if data_field is not None else self.data_field
+        self.table_name = table_name if table_name is not None else self.table_name
+        self.pk_field = pk_field if pk_field is not None else self.pk_field
 
         self.where_clause = where
         self.join_clause = join
@@ -86,7 +78,6 @@ class DatabaseBaseMixin:
         self.__db = None
 
 
-@typechecked
 class CreateUpdateMixin:
     def insert(self, data: t.Dict):
         """
@@ -109,13 +100,16 @@ class CreateUpdateMixin:
         pk = copy.deepcopy(data).pop(self.pk_field)
 
         self.set_table(self.table_name)
+
+        if pk is not None:
+            self.set_where((self.pk_field, '=', pk, 'and'))
+
         self.set_where(self.where_clause)
         self.set_join(self.join_clause)
 
         return self.query.update(data)
 
 
-@typechecked
 class ReadMixin:
     """
     Small mixin which implements simplest 'select' operation for extracting.
@@ -130,13 +124,13 @@ class ReadMixin:
         """
         self.create_connection()
         self.set_table(self.table_name)
+        self.set_select(self.select_clause)
 
         if pk is not None:
             self.set_where((self.pk_field, '=', pk, 'and'))
 
-        self.set_select(self.select_clause)
-        self.set_join(self.join_clause)
         self.set_where(self.where_clause)
+        self.set_join(self.join_clause)
 
         if pk is not None:
             return self.query.first()
@@ -144,9 +138,8 @@ class ReadMixin:
             return list(self.query.get())
 
 
-@typechecked
 class DeleteMixin:
-    def delete(self, pk: t.Optional[int]):
+    def delete(self, pk: t.Optional[int] = None):
         """
         Deletes object by a 'pk' or by a where clause if presented
 
