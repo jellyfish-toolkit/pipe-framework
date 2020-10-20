@@ -23,7 +23,7 @@ class TJinja2TemplateResponseReady(Transformer):
         autoescape = options.get('autoescape', jinja2.select_autoescape(['html', 'xml']))
         self.environ = jinja2.Environment(loader=loader, autoescape=autoescape, **options)
 
-    def load(self, store: frozendict) -> PipeResponse:
+    def transform(self, store: frozendict) -> PipeResponse:
         context = store.get(self.context_field, {})
         template = self.environ.get_template(self.template_name)
 

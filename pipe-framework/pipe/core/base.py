@@ -1,105 +1,189 @@
+import re
 import typing as t
 from abc import ABC, abstractmethod
 
 from frozendict import frozendict
 from rich.console import Console
-from valideer import ValidationError
+import valideer as V
+from rich.table import Table
 
-from pipe.core.exceptions import PipeException
-
-
-class Step(ABC):
-
-    @abstractmethod
-    def run(self, store: frozendict):
-        pass
+from pipe.core.exceptions import PipeException, StepExecutionException, StepValidationException
 
 
-
+# TODO: Implement this logic with metaclasses?
 class CombinedStep(ABC):
+    """
+    Abstract class which providing interface for step which can interact with more than one step
+    at once
+    """
+
     def __init__(self, obj_a, obj_b):
+        # Steps to interact
         self.obj_a, self.obj_b = obj_a, obj_b
 
     @abstractmethod
     def run(self, store: frozendict):
+        """
+        Method which provide ability to run any step
+
+        :param store: Current pipe state
+        :return: Store
+        """
         pass
 
 
-
 class OrStep(CombinedStep):
+    """
+    Tries to run step A, but if validation for step A is failed run step B
+    """
 
     def run(self, store: frozendict):
 
         try:
             result = self.obj_a.run(store)
-        except ValidationError:
+        except Exception as e:
+            store = store.copy(exception=e)
             result = self.obj_b.run(store)
 
         return result
 
 
-class Extractor(Step):
-    """Abstract class for Extractors.
-    Contains extract method which should be implemented by developer.
-
-    Main goal - get the data and pass it next. Can use store
-    with initial parameters, and can validate input [in development]
-
-    :raises: NotImplementedError
+class AndStep(CombinedStep):
+    """
+    Runs both A and B steps only in case both passed validation, and then puts result to
+    corresponding field in store
     """
 
-    def extract(self, store: frozendict):
-        pass
+    def run(self, store: frozendict):
+
+        try:
+            result_a = self.obj_a.run(store)
+            result_b = self.obj_b.run(store)
+        except Exception:
+            return store
+
+        return store.copy(**dict(obj_a=result_a, obj_b=result_b))
+
+
+class Step:
+    """
+    Abstract class providing interface for all steps related classes
+
+    There are three types of steps:
+
+    Extractor, Loader, Transformer.
+
+    *How to understand which one you need:*
+
+    1. If you need to get data (**extract**) from **external** source, you need extractor
+    2. If you need to send data (**load**) to **external** source, you need loader
+    3. If you need to interact with data (**transform**) you need transformer
+    """
+    _available_methods = ('extract', 'transform', 'load')
+    required_fields = None
+
+    def __and__(self, other):
+        return AndStep(self, other)
+
+    def __or__(self, other):
+        return OrStep(self, other)
+
+    def _parse_dynamic_fields(self):
+        dynamic_config = {}
+
+        for key in self.required_fields.keys():
+            if (key.startswith('+{') or key.startswith('{')) and key.endswith('}'):
+                variable_name = re.match(r'^+?{([a-z_A-Z])+\}$', key).pop()
+                dynamic_config.update({
+                    getattr(self, variable_name): self.required_fields.get(key)
+                })
+                del self.required_fields[key]
+
+        self.required_fields = dict(**self.required_fields, **dynamic_config)
+
+    def validate(self, store: frozendict):
+        self._parse_dynamic_fields()
+
+        validator = V.parse(self.required_fields)
+        try:
+            adapted = validator.validate(store)
+        except V.ValidationError as e:
+            raise StepValidationException(
+                f'Validation for step {self.__class__.__name__} failed with error \n{e.message}')
+
+        return store.copy(**adapted)
 
     def run(self, store: frozendict):
-        return self.extract(store)
+        """
+        Method which provide ability to run any step
+
+        :param store: Current pipe state
+        :return: Store
+        """
+
+        if self.required_fields is not None:
+            store = self.validate(store)
+
+        for method in self._available_methods:
+            if hasattr(self, method):
+                return getattr(self, method)(store)
+
+        raise StepExecutionException(
+            f"You should define one of this methods - {','.join(self._available_methods)}")
+
+
+class Extractor(Step):
+    pass
 
 
 class Transformer(Step):
-    """Abstract class for Transformers.
-    Contains transform method which should be implemented by developer.
-
-    Main goal - get the data, transform it and pass it next.
-
-    :raises: NotImplementedError
-    """
-
-    def transform(self, store: frozendict):
-        pass
-
-    def run(self, store: frozendict):
-        return self.transform(store)
+    pass
 
 
 class Loader(Step):
-    """Abstract class for Loader.
-    Contains load method which should be implemented by developer.
-
-    Main goal - get prepared data and put it to the view or storage.
-
-    :raises: NotImplementedError
-    """
-
-    def load(self, store: frozendict):
-        pass
-
-    def run(self, store: frozendict):
-        return self.load(store)
+    pass
 
 
 class BasePipe:
+    """
+    Base class for all pipes, implements running logic and inspection of pipe state on every
+    step
+    """
+
+    # Flag which show, should pipe print its state every step
     __inspection_mode: bool
 
     def __init__(self, initial, inspection: bool = False):
         self.__inspection_mode = inspection
-        self.store = frozendict(initial)
-
-        self.before_pipe(self.store)
+        self.store = self.before_pipe(frozendict(initial))
 
     def set_inspection(self, enable: bool = True):
+        """
+        Sets inspection mode
+
+        Examples:
+
+        *Toggle inspection on*::
+
+        >>> MyPipe({}).set_inspection()
+
+        *Toggle inspection off*::
+
+        >>> MyPipe({}).set_inspection(False)
+
+        :param enable:
+        :return: None
+        """
         self.__inspection_mode = enable
 
     def __print_step(self, step: Step, store: frozendict):
+        """
+        Prints passed step and store to the console
+
+        :param step:
+        :param store:
+        :return: None
+        """
         console = Console()
 
         console.log('Current step is -> ', step.__class__.__name__, f'({step.__module__})')
@@ -109,8 +193,14 @@ class BasePipe:
         console.log('----------------------------------------------------------------')
         console.log('\n\n')
 
-    def _run_pipe(self, pipe: t.Iterable[Step]) -> t.Union[
-        None, t.Any]:
+    def _run_pipe(self, pipe: t.Iterable[Step]) -> t.Union[None, t.Any]:
+        """
+        Protected method to run subpipe declared in schema (schema can be different depending on
+        pipe type)
+
+        :param pipe:
+        :return: Pipe result
+        """
 
         for item in pipe:
 
@@ -118,41 +208,77 @@ class BasePipe:
                 self.__print_step(item, self.store)
 
             if issubclass(item.__class__, Extractor) or issubclass(item.__class__, Transformer):
-                result = item.run(self.store)
+                intermediate_store = item.run(self.store)
 
-                if result is None or not issubclass(frozendict, result.__class__):
+                if self.interrupt(intermediate_store):
+                    return self.after_pipe(intermediate_store)
+
+                if intermediate_store is None or not issubclass(frozendict,
+                                                                intermediate_store.__class__):
                     raise PipeException(
-                        'Transformer and Extractor should always return a frozendict')  # noqa: E501
+                        'Transformer and Extractor should always return a frozendict')  #
+                    # noqa: E501
                 else:
-                    self.store = result
+                    self.store = intermediate_store
 
             if issubclass(item.__class__, Loader):
-                result = item.run(self.store)
+                intermediate_store = item.run(self.store)
 
-                if self.should_return(result):
-                    self.after_pipe(self.store)
-                    return result
+                if issubclass(intermediate_store.__class__, frozendict) or isinstance(
+                        intermediate_store, frozendict):
+                    self.store = intermediate_store
 
-                if issubclass(result.__class__, frozendict) or isinstance(result, frozendict):
-                    self.store = result
+        return self.after_pipe(self.store)
 
-        self.after_pipe(self.store)
-        return self.store
+    def before_pipe(self, store: frozendict) -> frozendict:
+        """
+        Hook for running custom pipe (or anything) before every pipe execution
 
-    def before_pipe(self, store: t.Mapping) -> t.NoReturn:
-        pass
+        :param store:
+        :return: None
+        """
+        return store
 
-    def after_pipe(self, stor: t.Mapping) -> t.NoReturn:
-        pass
+    def after_pipe(self, store: frozendict) -> frozendict:
+        """
+        Hook for running custom pipe (or anything) after every pipe execution
 
-    def should_return(self, result: t.Mapping):
+        :param store:
+        :return: None
+        """
+        return store
+
+    def interrupt(self, store: frozendict) -> bool:
+        """
+        Interruption hook which could be overridden, allow all subclassed pipes set one
+        condition, which will
+        be respected after any step was run. If it's true, pipe will not be finished and will
+        return value returned by loader immediately (respect after_pipe hook)
+
+        :param store:
+        :return: bool
+        """
         return False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__class__.__name__
 
 
 class NamedPipe(BasePipe):
+    """
+    Simple pipe structure to interact with named pipes.
+
+    Example::
+
+    >>> class MyPipe(NamedPipe):
+    ...     pipe_schema = {
+    ...         'crop_image': (EImage('<path>'), TCropImage(width=230, height=140), LSaveImage(
+    '<path>'))
+    ...     }
+    ...
+    ...image_path = MyPipe(<initial_store>).run_pipe('crop_image')
+
+    """
     pipe_schema: t.Dict[str, t.Iterable[Step]]
 
     def run_pipe(self, name: str):

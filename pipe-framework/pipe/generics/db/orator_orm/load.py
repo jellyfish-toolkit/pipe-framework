@@ -2,15 +2,14 @@ import valideer
 from frozendict import frozendict
 
 from pipe.core.base import Loader
-from pipe.core.decorators import validate
 from pipe.generics.db.orator_orm.mixins import DatabaseBaseMixin, CreateUpdateMixin, DeleteMixin
 
 
-@validate({
-    '+{table_name}': valideer.Type(str),
-    '+{data_field}': valideer.Type(str)
-})
 class LDBInsertUpdateBase(Loader, DatabaseBaseMixin, CreateUpdateMixin):
+    required_fields = {
+        '+{table_name}': valideer.Type(str),
+        '+{data_field}': valideer.Type(str)
+    }
 
     def load(self, store: frozendict) -> frozendict:
         """
@@ -35,11 +34,11 @@ class LDBInsertUpdateBase(Loader, DatabaseBaseMixin, CreateUpdateMixin):
         return store
 
 
-@validate({
-    '+{table_name}': valideer.Type(str),
-    '+{pk_field}': valideer.Type(str)
-})
 class LDatabaseDeleteBase(Loader, DatabaseBaseMixin, DeleteMixin):
+    required_fields = {
+        '+{table_name}': valideer.Type(str),
+        '+{pk_field}': valideer.Type(str)
+    }
 
     def load(self, store: frozendict) -> frozendict:
         pk_to_delete = store.get(self.pk_field)

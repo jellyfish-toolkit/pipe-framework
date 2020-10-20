@@ -63,10 +63,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__request</span>
 
-    <span class="k">def</span> <span class="nf">should_return</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+<div class="viewcode-block" id="HTTPPipe.should_return"><a class="viewcode-back" href="../../../api/index.html#pipe.server.pipe.HTTPPipe.should_return">[docs]</a>    <span class="k">def</span> <span class="nf">should_return</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
         <span class="c1"># If some loader returned response, we should catch it</span>
         <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">PipeResponse</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">PipeResponse</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">result</span>
+            <span class="k">return</span> <span class="n">result</span></div>
 
 <div class="viewcode-block" id="HTTPPipe.run_pipe"><a class="viewcode-back" href="../../../api/index.html#pipe.server.pipe.HTTPPipe.run_pipe">[docs]</a>    <span class="k">def</span> <span class="nf">run_pipe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The main method.</span>

@@ -43,41 +43,74 @@
 
 
 <div class="viewcode-block" id="Step"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.Step">[docs]</a><span class="k">class</span> <span class="nc">Step</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract class providing interface for all steps related classes</span>
 
-    <span class="nd">@abstractmethod</span>
+<span class="sd">    There are three types of steps:</span>
+
+<span class="sd">    Extractor, Loader, Transformer.</span>
+
+<span class="sd">    *How to understand which one you need:*</span>
+
+<span class="sd">    1. If you need to get data (**extract**) from **external** source, you need extractor</span>
+<span class="sd">    2. If you need to send data (**load**) to **external** source, you need loader</span>
+<span class="sd">    3. If you need to interact with data (**transform**) you need transformer</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Step.run"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.Step.run">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
-        <span class="k">pass</span></div>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method which provide ability to run any step</span>
+
+<span class="sd">        :param store: Current pipe state</span>
+<span class="sd">        :return: Store</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
 
 
+<div class="viewcode-block" id="CombinedStep"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.CombinedStep">[docs]</a><span class="k">class</span> <span class="nc">CombinedStep</span><span class="p">(</span><span class="n">Step</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract class which providing interface for step which can interact with more than one step</span>
+<span class="sd">    at once</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="CombinedStep"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.CombinedStep">[docs]</a><span class="k">class</span> <span class="nc">CombinedStep</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_a</span><span class="p">,</span> <span class="n">obj_b</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_a</span><span class="p">:</span> <span class="n">Step</span><span class="p">,</span> <span class="n">obj_b</span><span class="p">:</span> <span class="n">Step</span><span class="p">):</span>
+        <span class="c1"># Steps to interact</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">obj_a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_b</span> <span class="o">=</span> <span class="n">obj_a</span><span class="p">,</span> <span class="n">obj_b</span>
 
-    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="CombinedStep.run"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.CombinedStep.run">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
-        <span class="k">pass</span></div>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method which provide ability to run any step</span>
 
+<span class="sd">        :param store: Current pipe state</span>
+<span class="sd">        :return: Store</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
 
 
 <div class="viewcode-block" id="OrStep"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.OrStep">[docs]</a><span class="k">class</span> <span class="nc">OrStep</span><span class="p">(</span><span class="n">CombinedStep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tries to run step A, but if validation for step A is failed run step B</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
+<div class="viewcode-block" id="OrStep.run"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.OrStep.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_a</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">store</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">ValidationError</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_b</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">store</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">result</span></div>
+        <span class="k">return</span> <span class="n">result</span></div></div>
 
 
 <div class="viewcode-block" id="Extractor"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.Extractor">[docs]</a><span class="k">class</span> <span class="nc">Extractor</span><span class="p">(</span><span class="n">Step</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract class for Extractors.</span>
 <span class="sd">    Contains extract method which should be implemented by developer.</span>
 
-<span class="sd">    Main goal - get the data and pass it next. Can use store</span>
-<span class="sd">    with initial parameters, and can validate input [in development]</span>
+<span class="sd">    *Provides ability to get the data from external resources (DB, API, etc...)*</span>
 
 <span class="sd">    :raises: NotImplementedError</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -85,15 +118,15 @@
     <span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">store</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Extractor.run"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.Extractor.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">store</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="Transformer"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.Transformer">[docs]</a><span class="k">class</span> <span class="nc">Transformer</span><span class="p">(</span><span class="n">Step</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract class for Transformers.</span>
 <span class="sd">    Contains transform method which should be implemented by developer.</span>
 
-<span class="sd">    Main goal - get the data, transform it and pass it next.</span>
+<span class="sd">    *Provides ability to interact with pipe state*</span>
 
 <span class="sd">    :raises: NotImplementedError</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -101,15 +134,15 @@
     <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">store</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Transformer.run"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.Transformer.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">store</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="Loader"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.Loader">[docs]</a><span class="k">class</span> <span class="nc">Loader</span><span class="p">(</span><span class="n">Step</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Abstract class for Loader.</span>
 <span class="sd">    Contains load method which should be implemented by developer.</span>
 
-<span class="sd">    Main goal - get prepared data and put it to the view or storage.</span>
+<span class="sd">    *Provides ability to send data to external source (DB, API Client, Browser, etc...)*</span>
 
 <span class="sd">    :raises: NotImplementedError</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -117,11 +150,16 @@
     <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">store</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Loader.run"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.Loader.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">store</span><span class="p">)</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">BasePipe</span><span class="p">:</span>
+<div class="viewcode-block" id="BasePipe"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.BasePipe">[docs]</a><span class="k">class</span> <span class="nc">BasePipe</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for all pipes, implements running logic and inspection of pipe state on every step</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Flag which show, should pipe print its state every step</span>
     <span class="n">__inspection_mode</span><span class="p">:</span> <span class="nb">bool</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">inspection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
@@ -130,10 +168,33 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">before_pipe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">set_inspection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__inspection_mode</span> <span class="o">=</span> <span class="n">enable</span>
+<div class="viewcode-block" id="BasePipe.set_inspection"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.BasePipe.set_inspection">[docs]</a>    <span class="k">def</span> <span class="nf">set_inspection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets inspection mode</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">        *Toggle inspection on*::</span>
+
+<span class="sd">        &gt;&gt;&gt; MyPipe({}).set_inspection()</span>
+
+<span class="sd">        *Toggle inspection off*::</span>
+
+<span class="sd">        &gt;&gt;&gt; MyPipe({}).set_inspection(False)</span>
+
+<span class="sd">        :param enable:</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__inspection_mode</span> <span class="o">=</span> <span class="n">enable</span></div>
 
     <span class="k">def</span> <span class="nf">__print_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="n">Step</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">frozendict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prints passed step and store to the console</span>
+
+<span class="sd">        :param step:</span>
+<span class="sd">        :param store:</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">console</span> <span class="o">=</span> <span class="n">Console</span><span class="p">()</span>
 
         <span class="n">console</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Current step is -&gt; &#39;</span><span class="p">,</span> <span class="n">step</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
@@ -145,6 +206,13 @@
 
     <span class="k">def</span> <span class="nf">_run_pipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Step</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span>
         <span class="kc">None</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Protected method to run subpipe declared in schema (schema can be different depending on</span>
+<span class="sd">        pipe type)</span>
+
+<span class="sd">        :param pipe:</span>
+<span class="sd">        :return: Pipe result</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">pipe</span><span class="p">:</span>
 
@@ -153,6 +221,10 @@
 
             <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">Extractor</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">Transformer</span><span class="p">):</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">should_return</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">after_pipe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">result</span>
 
                 <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">frozendict</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="n">PipeException</span><span class="p">(</span>
@@ -163,35 +235,64 @@
             <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">Loader</span><span class="p">):</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">)</span>
 
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">should_return</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">after_pipe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">)</span>
-                    <span class="k">return</span> <span class="n">result</span>
-
                 <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">frozendict</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">frozendict</span><span class="p">):</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">store</span> <span class="o">=</span> <span class="n">result</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">after_pipe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span>
 
-    <span class="k">def</span> <span class="nf">before_pipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">NoReturn</span><span class="p">:</span>
-        <span class="k">pass</span>
+<div class="viewcode-block" id="BasePipe.before_pipe"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.BasePipe.before_pipe">[docs]</a>    <span class="k">def</span> <span class="nf">before_pipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">NoReturn</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Hook for running custom pipe (or anything) before every pipe execution</span>
 
-    <span class="k">def</span> <span class="nf">after_pipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stor</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">NoReturn</span><span class="p">:</span>
-        <span class="k">pass</span>
+<span class="sd">        :param store:</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
 
-    <span class="k">def</span> <span class="nf">should_return</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
-        <span class="k">return</span> <span class="kc">False</span>
+<div class="viewcode-block" id="BasePipe.after_pipe"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.BasePipe.after_pipe">[docs]</a>    <span class="k">def</span> <span class="nf">after_pipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">t</span><span class="o">.</span><span class="n">NoReturn</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Hook for running custom pipe (or anything) after every pipe execution</span>
+
+<span class="sd">        :param store:</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="BasePipe.should_return"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.BasePipe.should_return">[docs]</a>    <span class="k">def</span> <span class="nf">should_return</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Interruption hook which could be overridden, allow all subclassed pipes set one condition, which will</span>
+<span class="sd">        be respected after any step was run. If it&#39;s true, pipe will not be finished and will</span>
+<span class="sd">        return value returned by loader immediately (respect after_pipe hook)</span>
+
+<span class="sd">        :param result:</span>
+<span class="sd">        :return: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span></div>
 
 
-<span class="k">class</span> <span class="nc">NamedPipe</span><span class="p">(</span><span class="n">BasePipe</span><span class="p">):</span>
+<div class="viewcode-block" id="NamedPipe"><a class="viewcode-back" href="../../../api/index.html#pipe.core.base.NamedPipe">[docs]</a><span class="k">class</span> <span class="nc">NamedPipe</span><span class="p">(</span><span class="n">BasePipe</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple pipe structure to interact with named pipes.</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">    &gt;&gt;&gt; class MyPipe(NamedPipe):</span>
+<span class="sd">    ...     pipe_schema = {</span>
+<span class="sd">    ...         &#39;crop_image&#39;: (EImage(&#39;&lt;path&gt;&#39;), TCropImage(width=230, height=140), LSaveImage(&#39;&lt;path&gt;&#39;))</span>
+<span class="sd">    ...     }</span>
+<span class="sd">    ...</span>
+<span class="sd">    ...image_path = MyPipe(&lt;initial_store&gt;).run_pipe(&#39;crop_image&#39;)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">pipe_schema</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Step</span><span class="p">]]</span>
 
     <span class="k">def</span> <span class="nf">run_pipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">pipe_to_run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">())</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_pipe</span><span class="p">(</span><span class="n">pipe_to_run</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_pipe</span><span class="p">(</span><span class="n">pipe_to_run</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

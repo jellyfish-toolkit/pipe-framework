@@ -29,7 +29,7 @@ class App:
     __inspection_mode: bool = False
 
     def __make_endpoint(self, pipe: HTTPPipe):
-        return pipe.__class__.__name__
+        return pipe.__name__
 
     def route(self, route: str):
         """Decorator for adding pipe as a handler for a route
