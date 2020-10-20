@@ -1,8 +1,8 @@
 import valideer
 
-from pipe.core import PipeRequest
+from pipe.core.decorators import validate, configure
+from pipe.server import PipeRequest
 from src.db.config import DB_STEP_CONFIG
-from pipe.core.utils import configure, validate
 from pipe.generics.db.orator_orm.extract import EDBReadBase
 
 
@@ -11,4 +11,11 @@ from pipe.generics.db.orator_orm.extract import EDBReadBase
 })
 @configure(DB_STEP_CONFIG)
 class EDatabase(EDBReadBase):
+    pass
+
+
+@validate({
+    '+{pk_field}': valideer.Type(int)
+})
+class ETodoById(EDatabase):
     pass

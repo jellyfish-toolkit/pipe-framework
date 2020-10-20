@@ -1,8 +1,8 @@
 import json
 from datetime import datetime
 
-from frozendict import frozendict
-from werkzeug.wrappers import BaseRequest, BaseResponse, CommonRequestDescriptorsMixin, CommonResponseDescriptorsMixin
+from werkzeug.wrappers import BaseRequest, BaseResponse, CommonRequestDescriptorsMixin, \
+    CommonResponseDescriptorsMixin
 from werkzeug.wrappers.json import JSONMixin
 
 
@@ -14,19 +14,18 @@ class PipeResponse(BaseResponse, JSONMixin, CommonResponseDescriptorsMixin):
     pass
 
 
-def make_response(store: frozendict, is_json: bool = False, *args, **kwargs) -> PipeResponse:
-    """Makes WSGI Response from DataObject
+def make_response(data, is_json: bool = False, *args, **kwargs) -> PipeResponse:
+    """Makes WSGI Response from `data` argument
 
-    :param store: Store with response data
-    :type store: Store
+    :param data: Response data
     :return: WSGI Response
     :rtype: Response
     """
     if is_json:
-        data = json.dumps(store, cls=PipeJsonEncoder)
+        data = json.dumps(data, cls=PipeJsonEncoder)
         return PipeResponse(data, content_type='application/json', *args, **kwargs)
     else:
-        return PipeResponse(store, *args, **kwargs)
+        return PipeResponse(data, *args, **kwargs)
 
 
 class PipeJsonEncoder(json.JSONEncoder):

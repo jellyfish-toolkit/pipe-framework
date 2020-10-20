@@ -11,6 +11,9 @@ class DatabaseBaseMixin:
     connection_config: t.Dict[str, str]
     __db = None
     query = None
+    data_field = None
+    table_name = None
+    pk_field = None
 
     def __init__(self, table_name: t.Optional[str] = None, data_field: t.Optional[str] = None,
                  pk_field: str = 'id',

@@ -2,15 +2,15 @@ import valideer
 from frozendict import frozendict
 
 from pipe.core.base import Extractor
-from pipe.core.decorators import validate
 from pipe.generics.db.orator_orm.mixins import DatabaseBaseMixin, ReadMixin
 
 
-@validate({
-    '+{table_name}': valideer.Type(str),
-    '+{data_field}': valideer.Type(str)
-})
 class EDBReadBase(Extractor, DatabaseBaseMixin, ReadMixin):
+
+    required_fields = {
+        '+{table_name}': valideer.Type(str),
+        '+{data_field}': valideer.Type(str)
+    }
 
     def extract(self, store: frozendict):
         pk = store.get(self.pk_field, False)

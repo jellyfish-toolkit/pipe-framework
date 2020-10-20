@@ -51,22 +51,124 @@
 <p><strong>Base</strong></p>
 <blockquote>
 <div><span class="target" id="module-pipe.core.base"></span><dl class="py class">
+<dt id="pipe.core.base.BasePipe">
+<em class="property">class </em><code class="sig-prename descclassname">pipe.core.base.</code><code class="sig-name descname">BasePipe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">initial</span></em>, <em class="sig-param"><span class="n">inspection</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#BasePipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.BasePipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for all pipes, implements running logic and inspection of pipe state on every step</p>
+<dl class="py method">
+<dt id="pipe.core.base.BasePipe.after_pipe">
+<code class="sig-name descname">after_pipe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">store</span><span class="p">:</span> <span class="n">Mapping</span></em><span class="sig-paren">)</span> &#x2192; NoReturn<a class="reference internal" href="../_modules/pipe/core/base.html#BasePipe.after_pipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.BasePipe.after_pipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook for running custom pipe (or anything) after every pipe execution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>store</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pipe.core.base.BasePipe.before_pipe">
+<code class="sig-name descname">before_pipe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">store</span><span class="p">:</span> <span class="n">Mapping</span></em><span class="sig-paren">)</span> &#x2192; NoReturn<a class="reference internal" href="../_modules/pipe/core/base.html#BasePipe.before_pipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.BasePipe.before_pipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook for running custom pipe (or anything) before every pipe execution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>store</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pipe.core.base.BasePipe.set_inspection">
+<code class="sig-name descname">set_inspection</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">enable</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#BasePipe.set_inspection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.BasePipe.set_inspection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets inspection mode</p>
+<p>Examples:</p>
+<p><em>Toggle inspection on</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">MyPipe</span><span class="p">({})</span><span class="o">.</span><span class="n">set_inspection</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><em>Toggle inspection off</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">MyPipe</span><span class="p">({})</span><span class="o">.</span><span class="n">set_inspection</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>enable</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pipe.core.base.BasePipe.should_return">
+<code class="sig-name descname">should_return</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">result</span><span class="p">:</span> <span class="n">Mapping</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#BasePipe.should_return"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.BasePipe.should_return" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interruption hook which could be overridden, allow all subclassed pipes set one condition, which will
+be respected after any step was run. If it’s true, pipe will not be finished and will
+return value returned by loader immediately (respect after_pipe hook)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>result</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="pipe.core.base.CombinedStep">
-<em class="property">class </em><code class="sig-prename descclassname">pipe.core.base.</code><code class="sig-name descname">CombinedStep</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj_a</span></em>, <em class="sig-param"><span class="n">obj_b</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#CombinedStep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.CombinedStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">class </em><code class="sig-prename descclassname">pipe.core.base.</code><code class="sig-name descname">CombinedStep</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj_a</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#pipe.core.base.Step" title="pipe.core.base.Step">pipe.core.base.Step</a></span></em>, <em class="sig-param"><span class="n">obj_b</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#pipe.core.base.Step" title="pipe.core.base.Step">pipe.core.base.Step</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#CombinedStep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.CombinedStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class which providing interface for step which can interact with more than one step
+at once</p>
+<dl class="py method">
+<dt id="pipe.core.base.CombinedStep.run">
+<em class="property">abstract </em><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">store</span><span class="p">:</span> <span class="n">frozendict.frozendict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#CombinedStep.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.CombinedStep.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method which provide ability to run any step</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>store</strong> – Current pipe state</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Store</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
 
 <dl class="py class">
 <dt id="pipe.core.base.Extractor">
 <em class="property">class </em><code class="sig-prename descclassname">pipe.core.base.</code><code class="sig-name descname">Extractor</code><a class="reference internal" href="../_modules/pipe/core/base.html#Extractor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.Extractor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for Extractors.
 Contains extract method which should be implemented by developer.</p>
-<p>Main goal - get the data and pass it next. Can use store
-with initial parameters, and can validate input [in development]</p>
+<p><em>Provides ability to get the data from external resources (DB, API, etc…)</em></p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p>NotImplementedError</p>
 </dd>
 </dl>
+<dl class="py method">
+<dt id="pipe.core.base.Extractor.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">store</span><span class="p">:</span> <span class="n">frozendict.frozendict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#Extractor.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.Extractor.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method which provide ability to run any step</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>store</strong> – Current pipe state</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Store</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -74,35 +176,183 @@ with initial parameters, and can validate input [in development]</p>
 <em class="property">class </em><code class="sig-prename descclassname">pipe.core.base.</code><code class="sig-name descname">Loader</code><a class="reference internal" href="../_modules/pipe/core/base.html#Loader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.Loader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for Loader.
 Contains load method which should be implemented by developer.</p>
-<p>Main goal - get prepared data and put it to the view or storage.</p>
+<p><em>Provides ability to send data to external source (DB, API Client, Browser, etc…)</em></p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p>NotImplementedError</p>
 </dd>
 </dl>
+<dl class="py method">
+<dt id="pipe.core.base.Loader.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">store</span><span class="p">:</span> <span class="n">frozendict.frozendict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#Loader.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.Loader.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method which provide ability to run any step</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>store</strong> – Current pipe state</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Store</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="pipe.core.base.NamedPipe">
+<em class="property">class </em><code class="sig-prename descclassname">pipe.core.base.</code><code class="sig-name descname">NamedPipe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">initial</span></em>, <em class="sig-param"><span class="n">inspection</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#NamedPipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.NamedPipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple pipe structure to interact with named pipes.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyPipe</span><span class="p">(</span><span class="n">NamedPipe</span><span class="p">):</span>
+</pre></div>
+</div>
+<p>…     pipe_schema = {
+…         ‘crop_image’: (EImage(‘&lt;path&gt;’), TCropImage(width=230, height=140), LSaveImage(‘&lt;path&gt;’))
+…     }
+…
+…image_path = MyPipe(&lt;initial_store&gt;).run_pipe(‘crop_image’)</p>
+<dl class="py method">
+<dt id="pipe.core.base.NamedPipe.after_pipe">
+<code class="sig-name descname">after_pipe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">store</span><span class="p">:</span> <span class="n">Mapping</span></em><span class="sig-paren">)</span> &#x2192; NoReturn<a class="headerlink" href="#pipe.core.base.NamedPipe.after_pipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook for running custom pipe (or anything) after every pipe execution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>store</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pipe.core.base.NamedPipe.before_pipe">
+<code class="sig-name descname">before_pipe</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">store</span><span class="p">:</span> <span class="n">Mapping</span></em><span class="sig-paren">)</span> &#x2192; NoReturn<a class="headerlink" href="#pipe.core.base.NamedPipe.before_pipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook for running custom pipe (or anything) before every pipe execution</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>store</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pipe.core.base.NamedPipe.set_inspection">
+<code class="sig-name descname">set_inspection</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">enable</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pipe.core.base.NamedPipe.set_inspection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets inspection mode</p>
+<p>Examples:</p>
+<p><em>Toggle inspection on</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">MyPipe</span><span class="p">({})</span><span class="o">.</span><span class="n">set_inspection</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><em>Toggle inspection off</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">MyPipe</span><span class="p">({})</span><span class="o">.</span><span class="n">set_inspection</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>enable</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pipe.core.base.NamedPipe.should_return">
+<code class="sig-name descname">should_return</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">result</span><span class="p">:</span> <span class="n">Mapping</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pipe.core.base.NamedPipe.should_return" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interruption hook which could be overridden, allow all subclassed pipes set one condition, which will
+be respected after any step was run. If it’s true, pipe will not be finished and will
+return value returned by loader immediately (respect after_pipe hook)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>result</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt id="pipe.core.base.OrStep">
-<em class="property">class </em><code class="sig-prename descclassname">pipe.core.base.</code><code class="sig-name descname">OrStep</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj_a</span></em>, <em class="sig-param"><span class="n">obj_b</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#OrStep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.OrStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<em class="property">class </em><code class="sig-prename descclassname">pipe.core.base.</code><code class="sig-name descname">OrStep</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj_a</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#pipe.core.base.Step" title="pipe.core.base.Step">pipe.core.base.Step</a></span></em>, <em class="sig-param"><span class="n">obj_b</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#pipe.core.base.Step" title="pipe.core.base.Step">pipe.core.base.Step</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#OrStep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.OrStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tries to run step A, but if validation for step A is failed run step B</p>
+<dl class="py method">
+<dt id="pipe.core.base.OrStep.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">store</span><span class="p">:</span> <span class="n">frozendict.frozendict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#OrStep.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.OrStep.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method which provide ability to run any step</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>store</strong> – Current pipe state</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Store</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
 
 <dl class="py class">
 <dt id="pipe.core.base.Step">
 <em class="property">class </em><code class="sig-prename descclassname">pipe.core.base.</code><code class="sig-name descname">Step</code><a class="reference internal" href="../_modules/pipe/core/base.html#Step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.Step" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Abstract class providing interface for all steps related classes</p>
+<p>There are three types of steps:</p>
+<p>Extractor, Loader, Transformer.</p>
+<p><em>How to understand which one you need:</em></p>
+<ol class="arabic simple">
+<li><p>If you need to get data (<strong>extract</strong>) from <strong>external</strong> source, you need extractor</p></li>
+<li><p>If you need to send data (<strong>load</strong>) to <strong>external</strong> source, you need loader</p></li>
+<li><p>If you need to interact with data (<strong>transform</strong>) you need transformer</p></li>
+</ol>
+<dl class="py method">
+<dt id="pipe.core.base.Step.run">
+<em class="property">abstract </em><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">store</span><span class="p">:</span> <span class="n">frozendict.frozendict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#Step.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.Step.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method which provide ability to run any step</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>store</strong> – Current pipe state</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Store</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
 
 <dl class="py class">
 <dt id="pipe.core.base.Transformer">
 <em class="property">class </em><code class="sig-prename descclassname">pipe.core.base.</code><code class="sig-name descname">Transformer</code><a class="reference internal" href="../_modules/pipe/core/base.html#Transformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.Transformer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for Transformers.
 Contains transform method which should be implemented by developer.</p>
-<p>Main goal - get the data, transform it and pass it next.</p>
+<p><em>Provides ability to interact with pipe state</em></p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p>NotImplementedError</p>
 </dd>
 </dl>
+<dl class="py method">
+<dt id="pipe.core.base.Transformer.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">store</span><span class="p">:</span> <span class="n">frozendict.frozendict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/core/base.html#Transformer.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.core.base.Transformer.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method which provide ability to run any step</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>store</strong> – Current pipe state</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Store</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div></blockquote>
@@ -152,6 +402,22 @@ Takes data and pass through pipe. Handles request and response</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p>PipeException</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pipe.server.pipe.HTTPPipe.should_return">
+<code class="sig-name descname">should_return</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">result</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pipe/server/pipe.html#HTTPPipe.should_return"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pipe.server.pipe.HTTPPipe.should_return" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interruption hook which could be overridden, allow all subclassed pipes set one condition, which will
+be respected after any step was run. If it’s true, pipe will not be finished and will
+return value returned by loader immediately (respect after_pipe hook)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>result</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
