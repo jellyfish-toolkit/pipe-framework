@@ -1,11 +1,68 @@
 import re
 import typing as t
+from abc import ABC, abstractmethod
 
 from frozendict import frozendict
 from rich.console import Console
 import valideer as V
+from rich.table import Table
 
 from pipe.core.exceptions import PipeException, StepExecutionException, StepValidationException
+
+
+# TODO: Implement this logic with metaclasses?
+class CombinedStep(ABC):
+    """
+    Abstract class which providing interface for step which can interact with more than one step
+    at once
+    """
+
+    def __init__(self, obj_a, obj_b):
+        # Steps to interact
+        self.obj_a, self.obj_b = obj_a, obj_b
+
+    @abstractmethod
+    def run(self, store: frozendict):
+        """
+        Method which provide ability to run any step
+
+        :param store: Current pipe state
+        :return: Store
+        """
+        pass
+
+
+class OrStep(CombinedStep):
+    """
+    Tries to run step A, but if validation for step A is failed run step B
+    """
+
+    def run(self, store: frozendict):
+
+        try:
+            result = self.obj_a.run(store)
+        except Exception as e:
+            store = store.copy(exception=e)
+            result = self.obj_b.run(store)
+
+        return result
+
+
+class AndStep(CombinedStep):
+    """
+    Runs both A and B steps only in case both passed validation, and then puts result to
+    corresponding field in store
+    """
+
+    def run(self, store: frozendict):
+
+        try:
+            result_a = self.obj_a.run(store)
+            result_b = self.obj_b.run(store)
+        except Exception:
+            return store
+
+        return store.copy(**dict(obj_a=result_a, obj_b=result_b))
 
 
 class Step:
@@ -26,73 +83,25 @@ class Step:
     required_fields = None
 
     def __and__(self, other):
-        """
-        Overriding boolean AND operation for merging steps:
-
-        Example:
-        >>> EUser(pk=1) && EBook(where=('id', 1))
-
-        :param other: Second step for merging
-        """
-
-        def run(self, store: frozendict):
-
-            try:
-                result_a = self.obj_a.run(store)
-                result_b = self.obj_b.run(store)
-            except Exception:
-                return store
-
-            return store.copy(**dict(obj_a=result_a, obj_b=result_b))
-
-        return Step.factory(run, 'AndStep', obj_a=self, obj_b=other)()
+        return AndStep(self, other)
 
     def __or__(self, other):
-        """
-        Overriding boolean OR operation for merging steps:
+        return OrStep(self, other)
 
-        Example:
-        >>> EUser(pk=1) | LError()
-
-        :param other: Second step for merging
-        """
-
-        def run(self, store: frozendict):
-
-            try:
-                result = self.obj_a.run(store)
-            except Exception as e:
-                store = store.copy(**{'exception': e})
-                result = self.obj_b.run(store)
-
-            return result
-
-        return Step.factory(run, 'OrStep', obj_a=self, obj_b=other)()
-
-    def _parse_dynamic_fields(self) -> t.NoReturn:
-        """
-        Processes fields in validation config which should be taken from step instance
-        """
+    def _parse_dynamic_fields(self):
         dynamic_config = {}
-        keys = list(self.required_fields.keys())
 
-        for key in keys:
+        for key in self.required_fields.keys():
             if (key.startswith('+{') or key.startswith('{')) and key.endswith('}'):
-                variable_name = re.sub('\{|\}', '', key)
+                variable_name = re.match(r'^+?{([a-z_A-Z])+\}$', key).pop()
                 dynamic_config.update({
-                    getattr(self, variable_name.replace('+', '')): self.required_fields.get(key)
+                    getattr(self, variable_name): self.required_fields.get(key)
                 })
                 del self.required_fields[key]
 
         self.required_fields = dict(**self.required_fields, **dynamic_config)
 
-    def validate(self, store: frozendict) -> frozendict:
-        """
-        Validates store according to `required_fields` field
-
-        :param store:
-        :return: Store with adapted data
-        """
+    def validate(self, store: frozendict):
         self._parse_dynamic_fields()
 
         validator = V.parse(self.required_fields)
@@ -104,23 +113,12 @@ class Step:
 
         return store.copy(**adapted)
 
-    @classmethod
-    def factory(cls, run_method, name='', **kwargs):
-        return type(name, (cls,), dict(run=run_method, **kwargs))
-
-    def run(self, store: frozendict) -> frozendict:
+    def run(self, store: frozendict):
         """
-        Method which provide ability to run any step.
-
-        Pipe shouldn't know which exactly step is
-        running, that's why we need run method. But developers should be limited in 3 options,
-        which presented in `_available_methods`
-
-        You can extend this class and change `_available_methods` field, if you want to customize
-        this behavior
+        Method which provide ability to run any step
 
         :param store: Current pipe state
-        :return: frozendict
+        :return: Store
         """
 
         if self.required_fields is not None:
@@ -133,10 +131,6 @@ class Step:
         raise StepExecutionException(
             f"You should define one of this methods - {','.join(self._available_methods)}")
 
-
-# Base classes for semantics and behavior control
-# TODO: First candidates to remove in next iterations
-# TODO: ↓
 
 class Extractor(Step):
     pass
@@ -213,12 +207,26 @@ class BasePipe:
             if self.__inspection_mode:
                 self.__print_step(item, self.store)
 
-            intermediate_store = item.run(self.store)
+            if issubclass(item.__class__, Extractor) or issubclass(item.__class__, Transformer):
+                intermediate_store = item.run(self.store)
 
-            if self.interrupt(intermediate_store):
-                return self.after_pipe(intermediate_store)
+                if self.interrupt(intermediate_store):
+                    return self.after_pipe(intermediate_store)
 
-            self.store = intermediate_store
+                if intermediate_store is None or not issubclass(frozendict,
+                                                                intermediate_store.__class__):
+                    raise PipeException(
+                        'Transformer and Extractor should always return a frozendict')  #
+                    # noqa: E501
+                else:
+                    self.store = intermediate_store
+
+            if issubclass(item.__class__, Loader):
+                intermediate_store = item.run(self.store)
+
+                if issubclass(intermediate_store.__class__, frozendict) or isinstance(
+                        intermediate_store, frozendict):
+                    self.store = intermediate_store
 
         return self.after_pipe(self.store)
 
@@ -244,9 +252,8 @@ class BasePipe:
         """
         Interruption hook which could be overridden, allow all subclassed pipes set one
         condition, which will
-        be respected after any step was run. If method returns true, pipe will not be finished
-        and will
-        return value returned by step immediately (respect after_pipe hook)
+        be respected after any step was run. If it's true, pipe will not be finished and will
+        return value returned by loader immediately (respect after_pipe hook)
 
         :param store:
         :return: bool
