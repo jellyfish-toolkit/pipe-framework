@@ -14,10 +14,6 @@ class TransformerException(Exception):
     pass
 
 
-class StepInitializationException(Exception):
-    pass
-
-
 class StepExecutionException(Exception):
     pass
 

@@ -1,6 +1,7 @@
 import typing as t
 
 from pipe.core.base import BasePipe, Step
+from pipe.core.exceptions import PipeException
 from pipe.server.wrappers import PipeResponse, make_response
 
 
