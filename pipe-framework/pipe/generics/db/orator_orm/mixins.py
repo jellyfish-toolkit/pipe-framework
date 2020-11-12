@@ -56,15 +56,15 @@ class DatabaseBaseMixin:
         if where is not None:
             return self.query.where(*where)
 
-    def set_join(self, join: t.Optional[tuple] = None):
+    def set_join(self, _join: t.Optional[tuple] = None):
         """
         Sets join clause. See Orator docs for detailed info.
 
-        :param join:
+        :param _join:
         :return: Orator Query builder
         """
-        if join is not None:
-            return self.query.join(*join)
+        if _join is not None:
+            return self.query.join(*_join)
 
     def create_connection(self) -> t.NoReturn:
         """
@@ -87,7 +87,7 @@ class CreateUpdateMixin:
         Inserts data into a table
 
         :param data:
-        :return: id of inseted string
+        :return: id of inserted string
         """
         self.create_connection()
         return self.set_table(self.table_name).insert_get_id(data)
@@ -116,7 +116,7 @@ class CreateUpdateMixin:
 class ReadMixin:
     """
     Small mixin which implements simplest 'select' operation for extracting.
-    If this method do not fullfill all your requirements, you have to create your own extractor.
+    If this method does not fulfill all your requirements, you have to create your own extractor.
     """
 
     def select(self, pk: t.Optional[int] = None) -> t.Union[t.Mapping, list]:

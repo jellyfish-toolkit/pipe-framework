@@ -1,68 +1,11 @@
 import re
 import typing as t
-from abc import ABC, abstractmethod
 
 from frozendict import frozendict
 from rich.console import Console
 import valideer as V
-from rich.table import Table
 
 from pipe.core.exceptions import PipeException, StepExecutionException, StepValidationException
-
-
-# TODO: Implement this logic with metaclasses?
-class CombinedStep(ABC):
-    """
-    Abstract class which providing interface for step which can interact with more than one step
-    at once
-    """
-
-    def __init__(self, obj_a, obj_b):
-        # Steps to interact
-        self.obj_a, self.obj_b = obj_a, obj_b
-
-    @abstractmethod
-    def run(self, store: frozendict):
-        """
-        Method which provide ability to run any step
-
-        :param store: Current pipe state
-        :return: Store
-        """
-        pass
-
-
-class OrStep(CombinedStep):
-    """
-    Tries to run step A, but if validation for step A is failed run step B
-    """
-
-    def run(self, store: frozendict):
-
-        try:
-            result = self.obj_a.run(store)
-        except Exception as e:
-            store = store.copy(exception=e)
-            result = self.obj_b.run(store)
-
-        return result
-
-
-class AndStep(CombinedStep):
-    """
-    Runs both A and B steps only in case both passed validation, and then puts result to
-    corresponding field in store
-    """
-
-    def run(self, store: frozendict):
-
-        try:
-            result_a = self.obj_a.run(store)
-            result_b = self.obj_b.run(store)
-        except Exception:
-            return store
-
-        return store.copy(**dict(obj_a=result_a, obj_b=result_b))
 
 
 class Step:
@@ -83,12 +26,34 @@ class Step:
     required_fields = None
 
     def __and__(self, other):
-        return AndStep(self, other)
+
+        def run(self, store: frozendict):
+
+            try:
+                result_a = self.obj_a.run(store)
+                result_b = self.obj_b.run(store)
+            except Exception:
+                return store
+
+            return store.copy(**dict(obj_a=result_a, obj_b=result_b))
+
+        return Step.factory(run, 'AndStep', obj_a=self, obj_b=other)()
 
     def __or__(self, other):
-        return OrStep(self, other)
 
-    def _parse_dynamic_fields(self):
+        def run(self, store: frozendict):
+
+            try:
+                result = self.obj_a.run(store)
+            except Exception as e:
+                store = store.copy(exception=e)
+                result = self.obj_b.run(store)
+
+            return result
+
+        return Step.factory(run, 'OrStep', obj_a=self, obj_b=other)()
+
+    def _parse_dynamic_fields(self) -> t.NoReturn:
         dynamic_config = {}
 
         for key in self.required_fields.keys():
@@ -101,7 +66,7 @@ class Step:
 
         self.required_fields = dict(**self.required_fields, **dynamic_config)
 
-    def validate(self, store: frozendict):
+    def validate(self, store: frozendict) -> frozendict:
         self._parse_dynamic_fields()
 
         validator = V.parse(self.required_fields)
@@ -113,12 +78,23 @@ class Step:
 
         return store.copy(**adapted)
 
-    def run(self, store: frozendict):
+    @classmethod
+    def factory(cls, run_method, name='', **kwargs):
+        return type(name, (cls,), dict(run=run_method, **kwargs))
+
+    def run(self, store: frozendict) -> frozendict:
         """
-        Method which provide ability to run any step
+        Method which provide ability to run any step.
+
+        Pipe shouldn't know which exactly step is
+        running, that's why we need run method. But developers should be limited in 3 options,
+        which presented in `_available_methods`
+
+        You can extend this class and change `_available_methods` field, if you want to customize
+        this behavior
 
         :param store: Current pipe state
-        :return: Store
+        :return: frozendict
         """
 
         if self.required_fields is not None:
@@ -131,6 +107,8 @@ class Step:
         raise StepExecutionException(
             f"You should define one of this methods - {','.join(self._available_methods)}")
 
+
+# Base classes for semantics and behavior control
 
 class Extractor(Step):
     pass
@@ -252,8 +230,8 @@ class BasePipe:
         """
         Interruption hook which could be overridden, allow all subclassed pipes set one
         condition, which will
-        be respected after any step was run. If it's true, pipe will not be finished and will
-        return value returned by loader immediately (respect after_pipe hook)
+        be respected after any step was run. If method returns true, pipe will not be finished and will
+        return value returned by step immediately (respect after_pipe hook)
 
         :param store:
         :return: bool
