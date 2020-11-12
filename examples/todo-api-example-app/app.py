@@ -2,7 +2,7 @@ from pipe.server import HTTPPipe, app
 from pipe.server.http.extract import EJsonBody
 from src.db.load import LDatabase
 from src.db.extract import EDatabase, ETodoById
-from pipe.server.http.load import LJsonResponse, l_bad_request, LNotFound
+from pipe.server.http.load import LJsonResponse, LBadRequest, LNotFound
 from pipe.server.http.transform import TJsonResponseReady
 
 
@@ -32,7 +32,7 @@ class TodoDetailsResource(HTTPPipe):
     pipe_schema = {
         'GET': {
             'out': (
-                ETodoById(table_name='todo-items') | l_bad_request(),
+                EDatabase(table_name='todo-items') | LBadRequest(),
                 TJsonResponseReady(data_field='todo-items_item') | LNotFound(),
                 LJsonResponse()
             )
