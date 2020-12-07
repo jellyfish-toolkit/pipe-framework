@@ -1,3 +1,4 @@
+import typing as t
 from dataclasses import dataclass
 
 from frozendict import frozendict
@@ -17,3 +18,11 @@ class TPutDefaults(Transformer):
             return store.copy(**{
                 self.field_name: self.defaults
             })
+
+@dataclass
+class TLambda(Transformer):
+
+    lambda_: t.Callable = None
+
+    def transform(self, store: frozendict):
+        return self.lambda_(store)

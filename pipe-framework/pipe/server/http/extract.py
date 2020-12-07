@@ -1,6 +1,7 @@
 import valideer
 from frozendict import frozendict
 from pipe.core.base import Extractor
+from pipe.core.exceptions import ExtractorException
 from pipe.server.http.exceptions import EFormDataException
 from pipe.server.wrappers import PipeRequest
 
@@ -52,5 +53,9 @@ class EJsonBody(Extractor):
 
     def extract(self, store: frozendict):
         request = store.get('request')
+
+        if request.json is None:
+            raise ExtractorException('JSON is missing from request')
+
         store = store.copy(**{'json': request.json})
         return store
