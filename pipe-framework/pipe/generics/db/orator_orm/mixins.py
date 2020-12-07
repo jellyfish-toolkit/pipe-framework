@@ -3,6 +3,8 @@ import typing as t
 
 from orator import DatabaseManager
 
+from pipe.core.exceptions import StepInitializationException
+
 
 class DatabaseBaseMixin:
     """
@@ -23,6 +25,9 @@ class DatabaseBaseMixin:
         self.data_field = data_field if data_field is not None else self.data_field
         self.table_name = table_name if table_name is not None else self.table_name
         self.pk_field = pk_field if pk_field is not None else self.pk_field
+
+        if self.table_name is None:
+            raise StepInitializationException('`table_name` is missing')
 
         self.where_clause = where
         self.join_clause = join
@@ -152,7 +157,7 @@ class DeleteMixin:
 
         self.set_table(self.table_name)
 
-        if len(self.where_clause) > 0:
+        if self.where_clause is not None:
             self.set_where(self.where_clause)
         else:
             self.set_where((self.pk_field, '=', pk, 'and'))

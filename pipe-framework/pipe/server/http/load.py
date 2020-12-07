@@ -15,15 +15,15 @@ class LJsonResponse(Loader):
     """
 
     required_fields = {
-        '+{data_field}': valideer.Type(t.Union[t.Dict, t.List])
+        '+{data_field}': valideer.Type(list, dict)
     }
 
-    data_field = 'response'
-    status_field = 'status'
+    data_field: str = 'response'
+    status: int = 200
 
     def load(self, store: frozendict):
         return make_response(store.get(self.data_field), is_json=True,
-                             status=store.get(self.status_field, 200))
+                             status=self.status)
 
 
 @dataclass
@@ -33,31 +33,31 @@ class LResponse(Loader):
     """
 
     required_fields = {
-        '+{data_field}': valideer.Type(t.Union[t.Dict, t.List])
+        '+{data_field}': valideer.Type(str, list, dict)
     }
 
-    data_field = 'response'
-    status_field = 'status'
+    data_field: str = 'response'
+    status: int = 200
 
     def load(self, store: frozendict):
-        return make_response(store.get(self.data_field), status=store.get(self.status_field, 200))
+        return make_response(store.get(self.data_field), status=self.status)
 
 
 class LNotFound(Loader):
     def load(self, store: frozendict):
-        return make_response('object not found', status=404)
+        return make_response(f'object not found: {store.get("exception")}', status=404)
 
 
 class LServerError(Loader):
     def load(self, store: frozendict):
-        return make_response('server error', status=500)
+        return make_response(f'server error: {store.get("exception")}', status=500)
 
 
 class LUnauthorized(Loader):
     def load(self, store: frozendict):
-        return make_response('unauthorized', status=401)
+        return make_response(f'unauthorized: {store.get("exception")}', status=401)
 
 
 class LBadRequest(Loader):
     def load(self, store: frozendict):
-        return make_response('bad request', status=400)
+        return make_response(f'bad request: {store.get("exception")}', status=400)
