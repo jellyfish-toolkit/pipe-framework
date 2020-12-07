@@ -26,6 +26,14 @@ class Step:
     required_fields = None
 
     def __and__(self, other):
+        """
+        Overriding boolean AND operation for merging steps:
+
+        Example:
+        >>> EUser(pk=1) && EBook(where=('id', 1))
+
+        :param other: Second step for merging
+        """
 
         def run(self, store: frozendict):
 
@@ -40,13 +48,21 @@ class Step:
         return Step.factory(run, 'AndStep', obj_a=self, obj_b=other)()
 
     def __or__(self, other):
+        """
+        Overriding boolean OR operation for merging steps:
+
+        Example:
+        >>> EUser(pk=1) | LError()
+
+        :param other: Second step for merging
+        """
 
         def run(self, store: frozendict):
 
             try:
                 result = self.obj_a.run(store)
             except Exception as e:
-                store = store.copy(exception=e)
+                store = store.copy(**{'exception': e})
                 result = self.obj_b.run(store)
 
             return result
@@ -54,19 +70,29 @@ class Step:
         return Step.factory(run, 'OrStep', obj_a=self, obj_b=other)()
 
     def _parse_dynamic_fields(self) -> t.NoReturn:
+        """
+        Processes fields in validation config which should be taken from step instance
+        """
         dynamic_config = {}
+        keys = list(self.required_fields.keys())
 
-        for key in self.required_fields.keys():
+        for key in keys:
             if (key.startswith('+{') or key.startswith('{')) and key.endswith('}'):
-                variable_name = re.match(r'^+?{([a-z_A-Z])+\}$', key).pop()
+                variable_name = re.sub('\{|\}', '', key)
                 dynamic_config.update({
-                    getattr(self, variable_name): self.required_fields.get(key)
+                    getattr(self, variable_name.replace('+', '')): self.required_fields.get(key)
                 })
                 del self.required_fields[key]
 
         self.required_fields = dict(**self.required_fields, **dynamic_config)
 
     def validate(self, store: frozendict) -> frozendict:
+        """
+        Validates store according to `required_fields` field
+
+        :param store:
+        :return: Store with adapted data
+        """
         self._parse_dynamic_fields()
 
         validator = V.parse(self.required_fields)
@@ -109,6 +135,8 @@ class Step:
 
 
 # Base classes for semantics and behavior control
+# TODO: First candidates to remove in next iterations
+# TODO: ↓
 
 class Extractor(Step):
     pass
@@ -185,26 +213,12 @@ class BasePipe:
             if self.__inspection_mode:
                 self.__print_step(item, self.store)
 
-            if issubclass(item.__class__, Extractor) or issubclass(item.__class__, Transformer):
-                intermediate_store = item.run(self.store)
+            intermediate_store = item.run(self.store)
 
-                if self.interrupt(intermediate_store):
-                    return self.after_pipe(intermediate_store)
+            if self.interrupt(intermediate_store):
+                return self.after_pipe(intermediate_store)
 
-                if intermediate_store is None or not issubclass(frozendict,
-                                                                intermediate_store.__class__):
-                    raise PipeException(
-                        'Transformer and Extractor should always return a frozendict')  #
-                    # noqa: E501
-                else:
-                    self.store = intermediate_store
-
-            if issubclass(item.__class__, Loader):
-                intermediate_store = item.run(self.store)
-
-                if issubclass(intermediate_store.__class__, frozendict) or isinstance(
-                        intermediate_store, frozendict):
-                    self.store = intermediate_store
+            self.store = intermediate_store
 
         return self.after_pipe(self.store)
 
@@ -230,7 +244,8 @@ class BasePipe:
         """
         Interruption hook which could be overridden, allow all subclassed pipes set one
         condition, which will
-        be respected after any step was run. If method returns true, pipe will not be finished and will
+        be respected after any step was run. If method returns true, pipe will not be finished
+        and will
         return value returned by step immediately (respect after_pipe hook)
 
         :param store:
