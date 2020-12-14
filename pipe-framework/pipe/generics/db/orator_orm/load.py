@@ -9,7 +9,7 @@ from pipe.generics.db.orator_orm.mixins import DatabaseBaseMixin, CreateUpdateMi
 class LDBInsertUpdateBase(Loader, DatabaseBaseMixin, CreateUpdateMixin):
     required_fields = {
         '+{data_field}': valideer.Type(dict),
-        '{pk_field}': valideer.Type(int, str)
+        '{pk_field}': valideer.Type((int, str))
     }
 
     def load(self, store: frozendict) -> frozendict:
@@ -33,7 +33,7 @@ class LDBInsertUpdateBase(Loader, DatabaseBaseMixin, CreateUpdateMixin):
 
 class LDatabaseDeleteBase(Loader, DatabaseBaseMixin, DeleteMixin):
     required_fields = {
-        '+{pk_field}': valideer.Type(int, str)
+        '+{pk_field}': valideer.Type((int, str))
     }
 
     def load(self, store: frozendict) -> frozendict:

@@ -194,9 +194,7 @@ class BasePipe:
 
         console.log('Current step is -> ', step.__class__.__name__, f'({step.__module__})')
         console.log(f'{step.__class__.__name__} STORE STATE')
-        console.log('----------------------------------------------------------------')
-        console.log(store)
-        console.log('----------------------------------------------------------------')
+        console.print(store.__dict__, overflow='fold')
         console.log('\n\n')
 
     def _run_pipe(self, pipe: t.Iterable[Step]) -> t.Union[None, t.Any]:

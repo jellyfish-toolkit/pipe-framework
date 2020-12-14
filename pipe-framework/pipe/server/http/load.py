@@ -15,7 +15,7 @@ class LJsonResponse(Loader):
     """
 
     required_fields = {
-        '+{data_field}': valideer.Type(list, dict)
+        '+{data_field}': valideer.Type((list, dict))
     }
 
     data_field: str = 'response'
@@ -33,14 +33,20 @@ class LResponse(Loader):
     """
 
     required_fields = {
-        '+{data_field}': valideer.Type(str, list, dict)
+        '+{data_field}': valideer.Type((str, list, dict)),
+        '{status_field}': valideer.Type(int),
     }
 
     data_field: str = 'response'
-    status: int = 200
+    status_field: str = 'status'
+    headers: dict = None
+    status = None
 
     def load(self, store: frozendict):
-        return make_response(store.get(self.data_field), status=self.status)
+        if self.status is None:
+            self.status = store.get(self.status_field, 200)
+
+        return make_response(store.get(self.data_field), status=self.status, headers=self.headers)
 
 
 class LNotFound(Loader):
