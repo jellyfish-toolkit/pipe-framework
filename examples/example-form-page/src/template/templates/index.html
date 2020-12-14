@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pipes Example App</title>
+</head>
+<body>
+<table>
+    {% for item in items %}
+        <tr>
+            <td>{{ item.text }}</td>
+            <td>{{ item.done }}</td>
+            <td>{{ item.created_at }}</td>
+        </tr>
+    {% endfor %}
+</table>
+<form action="/" method="POST">
+    <input name="text" placeholder="Input new todo...">
+    <input type="submit" value="Add">
+</form>
+</body>
+</html>

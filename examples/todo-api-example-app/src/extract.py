@@ -7,6 +7,6 @@ class ETodoJsonBody(EJsonBody):
     required_fields = {
         **EJsonBody.required_fields,
         **{
-            '+id': valideer.Type(int, str)
+            '+id': valideer.Type((int, str))
         }
     }

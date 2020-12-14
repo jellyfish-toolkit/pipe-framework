@@ -15,7 +15,7 @@ class TJsonResponseReady(Transformer):
     """
 
     required_fields = {
-        '+{data_field}': valideer.Type((dict, list,))
+        '+{data_field}': valideer.Type((dict, list))
     }
 
     data_field: str

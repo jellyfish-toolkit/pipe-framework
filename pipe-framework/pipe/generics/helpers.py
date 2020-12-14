@@ -8,20 +8,20 @@ from pipe.core.base import Transformer
 
 @dataclass
 class TPutDefaults(Transformer):
-        """
-        Helper transformers, which puts values from defaults into Store
-        """
-        defaults: dict
-        field_name: str
+    """
+    Helper transformers, which puts values from defaults into Store
+    """
+    defaults: dict
+    field_name: str
 
-        def transform(self, store: frozendict) -> frozendict:
-            return store.copy(**{
-                self.field_name: self.defaults
-            })
+    def transform(self, store: frozendict) -> frozendict:
+        return store.copy(**{
+            self.field_name: dict(**self.defaults, **store.get(self.field_name))
+        })
+
 
 @dataclass
 class TLambda(Transformer):
-
     lambda_: t.Callable = None
 
     def transform(self, store: frozendict):
