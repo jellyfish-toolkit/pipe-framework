@@ -1,7 +1,8 @@
 # Pipe Framework
 
 Data oriented web microframework.
-Allows you to create web-services with ETL approach instead of traditional MVC
+Allows you to create web-services with ETL approach instead of traditional MVC.
+Not related to the HBO's Silicon Valley show.
 
 ## Introduction
 
