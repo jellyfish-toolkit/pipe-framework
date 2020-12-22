@@ -32,8 +32,9 @@ class FormPage(HTTPPipe):
             ),
             'out': (
                 EDatabase(table_name='todo-items'),
-                TLambda(lambda_=lambda store: frozendict(context=dict(
-                    items=store.get('todo-items_list')))),
+                TLambda(lambda_=lambda store: frozendict(
+                    context=dict(items=store.get('todo-items_list'))
+                )),
                 TTemplateResponseReady(template_name='index.html'),
                 LResponse(data_field='template', headers={'Content-Type': 'text/html'})
             )
