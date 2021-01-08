@@ -15,9 +15,7 @@ class TPutDefaults(Transformer):
     field_name: str
 
     def transform(self, store: frozendict) -> frozendict:
-        return store.copy(**{
-            self.field_name: dict(**self.defaults, **store.get(self.field_name))
-        })
+        return store.copy(**{self.field_name: dict(**self.defaults, **store.get(self.field_name))})
 
 
 @dataclass

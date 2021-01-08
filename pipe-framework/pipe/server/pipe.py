@@ -36,9 +36,7 @@ class HTTPPipe(BasePipe):
 
     def interrupt(self, store):
         # If some step returned response, we should catch it
-        return issubclass(store.__class__, PipeResponse) or isinstance(
-            store, PipeResponse
-        )
+        return issubclass(store.__class__, PipeResponse) or isinstance(store, PipeResponse)
 
     def run_pipe(self):
         """The main method.

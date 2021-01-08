@@ -8,8 +8,9 @@ from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.shared_data import SharedDataMiddleware
 from werkzeug.routing import Map, Rule
 from werkzeug.serving import run_simple
-from pipe.server.wrappers import PipeRequest, PipeResponse
+
 from pipe.server.pipe import HTTPPipe
+from pipe.server.wrappers import PipeRequest, PipeResponse
 
 
 class AppException(Exception):
@@ -37,18 +38,16 @@ class App:
         :param route: Werkzeug formatted route
         :type route: string
         """
-
         def decorator(pipe):
             endpoint = self.__make_endpoint(pipe)
             if endpoint in self.__pipes:
                 raise AppException(
                     'Route rewrites previously added route, please use hooks if you want to run '
-                    'more then one pipe')
+                    'more then one pipe'
+                )
 
             self.__map.add(Rule(route, endpoint=endpoint))
-            self.__pipes = self.__pipes.copy(**{
-                endpoint: pipe
-            })
+            self.__pipes = self.__pipes.copy(**{endpoint: pipe})
 
         return decorator
 
@@ -76,20 +75,19 @@ class App:
 
     def __call__(self, environ, start_response):
         if self.__static_serving:
-            app_with_static = SharedDataMiddleware(self.wsgi_app,
-                                                   {self.__static_url: self.__static_folder})
+            app_with_static = SharedDataMiddleware(self.wsgi_app, {self.__static_url: self.__static_folder})
             return app_with_static(environ, start_response)
         else:
             return self.wsgi_app(environ, start_response)
 
     def run(
-            self,
-            host: str = '127.0.0.1',
-            port: int = 8000,
-            static_folder: t.Optional[str] = None,
-            static_url: str = '/static',
-            *args,
-            **kwargs
+        self,
+        host: str = '127.0.0.1',
+        port: int = 8000,
+        static_folder: t.Optional[str] = None,
+        static_url: str = '/static',
+        *args,
+        **kwargs
     ):
         """Method for running application, actually pretty similar to the Flask run method
 

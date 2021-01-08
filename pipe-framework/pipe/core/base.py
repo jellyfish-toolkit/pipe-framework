@@ -1,11 +1,11 @@
 import re
 import typing as t
 
+import valideer as V
 from frozendict import frozendict
 from rich.console import Console
-import valideer as V
 
-from pipe.core.exceptions import PipeException, StepExecutionException, StepValidationException
+from pipe.core.exceptions import StepExecutionException, StepValidationException
 
 
 class Step:
@@ -34,7 +34,6 @@ class Step:
 
         :param other: Second step for merging
         """
-
         def run(self, store: frozendict):
 
             try:
@@ -56,7 +55,6 @@ class Step:
 
         :param other: Second step for merging
         """
-
         def run(self, store: frozendict):
 
             try:
@@ -78,10 +76,8 @@ class Step:
 
         for key in keys:
             if (key.startswith('+{') or key.startswith('{')) and key.endswith('}'):
-                variable_name = re.sub('\{|\}', '', key)
-                dynamic_config.update({
-                    getattr(self, variable_name.replace('+', '')): self.required_fields.get(key)
-                })
+                variable_name = re.sub(r'\{|\}', '', key)
+                dynamic_config.update({getattr(self, variable_name.replace('+', '')): self.required_fields.get(key)})
                 del self.required_fields[key]
 
         self.required_fields = dict(**self.required_fields, **dynamic_config)
@@ -100,13 +96,14 @@ class Step:
             adapted = validator.validate(store)
         except V.ValidationError as e:
             raise StepValidationException(
-                f'Validation for step {self.__class__.__name__} failed with error \n{e.message}')
+                f'Validation for step {self.__class__.__name__} failed with error \n{e.message}'
+            )
 
         return store.copy(**adapted)
 
     @classmethod
     def factory(cls, run_method, name='', **kwargs):
-        return type(name, (cls,), dict(run=run_method, **kwargs))
+        return type(name, (cls, ), dict(run=run_method, **kwargs))
 
     def run(self, store: frozendict) -> frozendict:
         """
@@ -130,13 +127,13 @@ class Step:
             if hasattr(self, method):
                 return getattr(self, method)(store)
 
-        raise StepExecutionException(
-            f"You should define one of this methods - {','.join(self._available_methods)}")
+        raise StepExecutionException(f"You should define one of this methods - {','.join(self._available_methods)}")
 
 
 # Base classes for semantics and behavior control
 # TODO: First candidates to remove in next iterations
 # TODO: ↓
+
 
 class Extractor(Step):
     pass

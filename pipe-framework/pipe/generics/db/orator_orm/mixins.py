@@ -17,10 +17,15 @@ class DatabaseBaseMixin:
     table_name = None
     pk_field = None
 
-    def __init__(self, table_name: t.Optional[str] = None, data_field: t.Optional[str] = None,
-                 pk_field: str = 'id',
-                 where: t.Optional[tuple] = None, join: t.Optional[tuple] = None,
-                 select: t.Optional[tuple] = None):
+    def __init__(
+        self,
+        table_name: t.Optional[str] = None,
+        data_field: t.Optional[str] = None,
+        pk_field: str = 'id',
+        where: t.Optional[tuple] = None,
+        join: t.Optional[tuple] = None,
+        select: t.Optional[tuple] = None
+    ):
 
         self.data_field = data_field if data_field is not None else self.data_field
         self.table_name = table_name if table_name is not None else self.table_name
@@ -123,7 +128,6 @@ class ReadMixin:
     Small mixin which implements simplest 'select' operation for extracting.
     If this method does not fulfill all your requirements, you have to create your own extractor.
     """
-
     def select(self, pk: t.Optional[int] = None) -> t.Union[t.Mapping, list]:
         """
         Returns list of the objects from database or just one object, if 'pk' param is presented

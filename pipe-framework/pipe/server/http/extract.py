@@ -1,5 +1,6 @@
 import valideer
 from frozendict import frozendict
+
 from pipe.core.base import Extractor
 from pipe.core.exceptions import ExtractorException
 from pipe.server.http.exceptions import EFormDataException
@@ -10,9 +11,7 @@ class EFormData(Extractor):
     """
     Generic extractor for form data from PipeRequest
     """
-    required_fields = {
-        '+{request_field}': valideer.Type(PipeRequest)
-    }
+    required_fields = {'+{request_field}': valideer.Type(PipeRequest)}
 
     request_field = 'request'
     method: str = 'POST'
@@ -29,9 +28,7 @@ class EQueryStringData(Extractor):
     """
     Generic extractor for data from query string which you can find after ? sign in URL
     """
-    required_fields = {
-        '+{request_field}': valideer.Type(PipeRequest)
-    }
+    required_fields = {'+{request_field}': valideer.Type(PipeRequest)}
 
     request_field = 'request'
 
@@ -45,9 +42,7 @@ class EJsonBody(Extractor):
     """
     Generic extractor for data which came in JSON format
     """
-    required_fields = {
-        '+{request_field}': valideer.Type(PipeRequest)
-    }
+    required_fields = {'+{request_field}': valideer.Type(PipeRequest)}
 
     request_field = 'request'
 
