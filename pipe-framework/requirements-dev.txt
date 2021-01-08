@@ -2,4 +2,4 @@ yapf
 isort
 flake8
 mypy
-recommonmark
+pydoc-markdown

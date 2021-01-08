@@ -1,6 +1,5 @@
-import typing as t
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import valideer
 from frozendict import frozendict
@@ -14,9 +13,7 @@ class TJsonResponseReady(Transformer):
     Converts object from a 'data_field' for a simpliest API representation
     """
 
-    required_fields = {
-        '+{data_field}': valideer.Type((dict, list))
-    }
+    required_fields = {'+{data_field}': valideer.Type((dict, list))}
 
     data_field: str
 
