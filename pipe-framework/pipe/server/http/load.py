@@ -1,4 +1,3 @@
-import typing as t
 from dataclasses import dataclass
 
 import valideer
@@ -14,16 +13,13 @@ class LJsonResponse(Loader):
     Creates JSON response from field in 'data_field' property
     """
 
-    required_fields = {
-        '+{data_field}': valideer.Type((list, dict))
-    }
+    required_fields = {'+{data_field}': valideer.Type((list, dict))}
 
     data_field: str = 'response'
     status: int = 200
 
     def load(self, store: frozendict):
-        return make_response(store.get(self.data_field), is_json=True,
-                             status=self.status)
+        return make_response(store.get(self.data_field), is_json=True, status=self.status)
 
 
 @dataclass

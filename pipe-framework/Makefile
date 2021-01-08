@@ -16,9 +16,3 @@ yapf-format:
 
 yapf-lint:
 	yapf -d -r --style .style.yapf .
-
-generate-tags:
-	ctags -R --exclude=.git --exclude=dist --exclude=env .
-
-documentation:
-	sphinx-build -b html ./docs/src ./docs
