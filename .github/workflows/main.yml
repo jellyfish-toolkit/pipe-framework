@@ -2,15 +2,15 @@
 
 name: Lint
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: 
+    branches:
       - master
       - release
   pull_request:
-    branches: 
+    branches:
       - master
       - release
 
@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Setup Python
         uses: actions/setup-python@v2.2.1
-        
+
       - name: Install
         run: pip install -r pipe-framework/requirements-dev.txt
 
