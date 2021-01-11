@@ -1,6 +1,5 @@
 import valideer
 from frozendict import frozendict
-
 from pipe.core.base import Extractor
 from pipe.core.exceptions import ExtractorException
 from pipe.server.http.exceptions import EFormDataException

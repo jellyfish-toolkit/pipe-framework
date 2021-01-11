@@ -9,6 +9,4 @@ DATABASES = {
     }
 }
 
-DB_STEP_CONFIG = {
-    'connection_config': DATABASES
-}
+DB_STEP_CONFIG = {'connection_config': DATABASES}
