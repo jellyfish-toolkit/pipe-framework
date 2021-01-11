@@ -5,7 +5,7 @@ Allows you to create web-services with ETL approach instead of traditional MVC.
 
 **Not related to the HBO's Silicon Valley show.**
 
-![Lint](https://github.com/jellyfish-tech/pipe-framework/workflows/Lint/badge.svg)
+![Lint](https://github.com/jellyfish-tech/pipe-framework/workflows/Lint/badge.svg?branch=master)
 
 ## Introduction
 
