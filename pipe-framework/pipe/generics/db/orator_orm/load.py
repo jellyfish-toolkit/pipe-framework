@@ -1,10 +1,7 @@
 import valideer
 from frozendict import frozendict
-
 from pipe.core.base import Loader
-from pipe.generics.db.orator_orm.mixins import (
-    CreateUpdateMixin, DatabaseBaseMixin, DeleteMixin
-)
+from pipe.generics.db.orator_orm.mixins import CreateUpdateMixin, DatabaseBaseMixin, DeleteMixin
 
 
 class LDBInsertUpdateBase(Loader, DatabaseBaseMixin, CreateUpdateMixin):

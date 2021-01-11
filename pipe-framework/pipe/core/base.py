@@ -3,14 +3,13 @@ import typing as t
 
 import valideer as V
 from frozendict import frozendict
-from rich.console import Console
-
 from pipe.core.exceptions import StepExecutionException, StepValidationException
+from rich.console import Console
 
 
 class Step:
     """
-    Abstract class providing interface for all steps related classes
+    Base class providing basic functionality for all steps related classes
 
     There are three types of steps:
 
@@ -23,18 +22,22 @@ class Step:
     3. If you need to interact with data (**transform**) you need transformer
     """
     _available_methods = ('extract', 'transform', 'load')
+
+    # field for store validation schema
     required_fields = None
 
-    def __and__(self, other):
+    def __and__(self, other: 'Step') -> 'Step':
         """
         Overriding boolean AND operation for merging steps:
 
         Example:
-        >>> EUser(pk=1) && EBook(where=('id', 1))
+        ```python
+        EUser(pk=1) & EBook(where=('id', 1))
+        ```
 
-        :param other: Second step for merging
+        In case any of steps throws an exception, nothing happens
         """
-        def run(self, store: frozendict):
+        def run(self, store: frozendict) -> frozendict:
 
             try:
                 result_a = self.obj_a.run(store)
@@ -46,16 +49,20 @@ class Step:
 
         return Step.factory(run, 'AndStep', obj_a=self, obj_b=other)()
 
-    def __or__(self, other):
+    def __or__(self, other: 'Step') -> 'Step':
         """
         Overriding boolean OR operation for merging steps:
 
         Example:
-        >>> EUser(pk=1) | LError()
+        ```python
+        EUser(pk=1) | LError()
+        ```
 
-        :param other: Second step for merging
+        in case first step throws an exception then store goes to the second step
+        with information about an exception in the store
+
         """
-        def run(self, store: frozendict):
+        def run(self, store: frozendict) -> frozendict:
 
             try:
                 result = self.obj_a.run(store)
@@ -102,7 +109,7 @@ class Step:
         return store.copy(**adapted)
 
     @classmethod
-    def factory(cls, run_method, name='', **kwargs):
+    def factory(cls, run_method: t.Callable, name: str = '', **kwargs):
         return type(name, (cls, ), dict(run=run_method, **kwargs))
 
     def run(self, store: frozendict) -> frozendict:
@@ -156,7 +163,7 @@ class BasePipe:
     # Flag which show, should pipe print its state every step
     __inspection_mode: bool
 
-    def __init__(self, initial, inspection: bool = False):
+    def __init__(self, initial: t.Mapping, inspection: bool = False):
         self.__inspection_mode = inspection
         self.store = self.before_pipe(frozendict(initial))
 
@@ -166,16 +173,17 @@ class BasePipe:
 
         Examples:
 
-        *Toggle inspection on*::
+        *Toggle inspection on*:
 
-        >>> MyPipe({}).set_inspection()
+        ```python
+        MyPipe({}).set_inspection()
+        ```
 
-        *Toggle inspection off*::
+        *Toggle inspection off*:
 
-        >>> MyPipe({}).set_inspection(False)
-
-        :param enable:
-        :return: None
+        ```python
+        MyPipe({}).set_inspection(False)
+        ```
         """
         self.__inspection_mode = enable
 
@@ -220,18 +228,12 @@ class BasePipe:
     def before_pipe(self, store: frozendict) -> frozendict:
         """
         Hook for running custom pipe (or anything) before every pipe execution
-
-        :param store:
-        :return: None
         """
         return store
 
     def after_pipe(self, store: frozendict) -> frozendict:
         """
         Hook for running custom pipe (or anything) after every pipe execution
-
-        :param store:
-        :return: None
         """
         return store
 
@@ -241,10 +243,7 @@ class BasePipe:
         condition, which will
         be respected after any step was run. If method returns true, pipe will not be finished
         and will
-        return value returned by step immediately (respect after_pipe hook)
-
-        :param store:
-        :return: bool
+        return value returned by step immediately (respects after_pipe hook)
         """
         return False
 
@@ -256,16 +255,16 @@ class NamedPipe(BasePipe):
     """
     Simple pipe structure to interact with named pipes.
 
-    Example::
+    Example:
 
-    >>> class MyPipe(NamedPipe):
-    ...     pipe_schema = {
-    ...         'crop_image': (EImage('<path>'), TCropImage(width=230, height=140), LSaveImage(
-    '<path>'))
-    ...     }
-    ...
-    ...image_path = MyPipe(<initial_store>).run_pipe('crop_image')
+    ```python
+    class MyPipe(NamedPipe):
+         pipe_schema = {
+             'crop_image': (EImage('<path>'), TCrop(width=230, height=140), LSave('<path>'))
+         }
 
+    image_path = MyPipe(<initial_store>).run_pipe('crop_image')
+    ```
     """
     pipe_schema: t.Dict[str, t.Iterable[Step]]
 
