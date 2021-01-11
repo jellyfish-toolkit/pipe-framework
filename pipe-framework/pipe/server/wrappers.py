@@ -1,10 +1,7 @@
 import json
 from datetime import datetime
 
-from werkzeug.wrappers import (
-    BaseRequest, BaseResponse, CommonRequestDescriptorsMixin,
-    CommonResponseDescriptorsMixin
-)
+from werkzeug.wrappers import BaseRequest, BaseResponse, CommonRequestDescriptorsMixin, CommonResponseDescriptorsMixin
 from werkzeug.wrappers.json import JSONMixin
 
 

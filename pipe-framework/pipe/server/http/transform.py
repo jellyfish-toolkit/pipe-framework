@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 import valideer
 from frozendict import frozendict
-
 from pipe.core.base import Transformer
 
 

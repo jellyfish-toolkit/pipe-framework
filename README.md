@@ -234,5 +234,88 @@ if __name__ == '__main__':
 
 Now you can execute `$ python app.py` and go to `http://localhost:8000/todo/`.
 
-As for now we just scratched the surface, there much more like *store validation*, *combined steps*, different kinds of pipes, 
-much more useful generics etc. For more information check the `docs/` folder
+
+## Store validation
+
+As first we need to find out what is store in Pipe Framework
+
+### Store 
+
+When pipe started, before the first step pipe calls `before_pipe` hook 
+(you can use this hook to perform some operations on the store before executing)
+
+```python        
+class BasePipe:
+   def __init__(self, initial, inspection: bool = False):
+        self.__inspection_mode = inspection
+        self.store = self.before_pipe(frozendict(initial))
+```
+
+as you can see above, store is nothing but `frozendict` instance. You can't manipulate data inside the store,
+but you can create new instance with `frozendict().copy()` method. You can find more in corresponding 
+[readme file](https://github.com/slezica/python-frozendict)
+
+### Validation
+
+Steps are independent unaware pieces of functionality, but sometimes for perfoming some operations
+step could require some specific data in the store. For this purposes there are `required_fields` field
+in step configuration. 
+
+Pipe Framework uses [Valideer](https://github.com/podio/valideer) for validation, but it is a candidate for 
+deprecation in next iterations
+
+#### Example
+
+All you have to do is write a dict with required fields (check [Valideer](https://github.com/podio/valideer) 
+for more information about available validators)
+
+```python
+    required_fields = {'+some_field': valideer.Type(dict)} # `+` means required field
+```
+
+#### Dynamic validation
+
+Sometimes in step you can have some dynamic fields, showing which store field contains required information.
+You can't know how this field named, but you know in what step variable this value is available. 
+If you want to validate this fields as well you have to add curly braces inside which there will be name of class field
+
+```python
+    required_fields = {'+{pk_field}': valideer.Type(dict)} # everything else is the same                             
+```                                                                                    
+Pipe framework will substitute this field with class field value automatically, and then perform validation. 
+
+## Steps arithmetics
+
+You can combine two or more steps in case you need some conditional execution. 
+
+In this example you can see first available operation - `|` (OR)
+
+```python 
+    pipe_schema = {
+        'GET': {
+            'out': (
+                # In this case, if EDatabase step throws 
+                # any exception, then LNotFound step will be executed, with information about exception
+                # in store  
+                EDatabase(table_name='todo-items') | LNotFound(), 
+                TJsonResponseReady(data_field='todo-items_item'),
+                LJsonResponse()
+            )
+        },
+```
+
+There is also second operator - `&` (AND)
+
+```python 
+    pipe_schema = {
+        'GET': {
+            'out': (
+                # In this case, if EDatabase step throws 
+                # any exception, or SomethingImportantAsWell throws any exception
+                # then nothing happens and store without a change goes to next step
+                EDatabase(table_name='todo-items') & SomethingImportantAsWell(), 
+                TJsonResponseReady(data_field='todo-items_item'),
+                LJsonResponse()
+            )
+        },
+```

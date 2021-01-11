@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 import valideer
 from frozendict import frozendict
-
 from pipe.core.base import Loader
 from pipe.server.wrappers import make_response
 

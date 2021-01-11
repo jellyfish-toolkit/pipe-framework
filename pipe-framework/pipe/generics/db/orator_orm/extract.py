@@ -1,11 +1,24 @@
 from frozendict import frozendict
-
 from pipe.core.base import Extractor
 from pipe.generics.db.exceptions import DatabaseException
 from pipe.generics.db.orator_orm.mixins import DatabaseBaseMixin, ReadMixin
 
 
 class EDBReadBase(Extractor, DatabaseBaseMixin, ReadMixin):
+    """
+    Base step for extracting data from database. Requires configuration for connecting to the
+    database
+
+    Example:
+
+    >>>   @configure(DB_STEP_CONFIG)
+    >>>   class EDatabase(EDBReadBase):
+    >>>      pass
+
+    Usage example:
+
+    >>> EDatabase(table_name='todo-items'),
+    """
     def extract(self, store: frozendict):
         pk = store.get(self.pk_field, False)
 

@@ -2,7 +2,6 @@ import copy
 import typing as t
 
 from orator import DatabaseManager
-
 from pipe.core.exceptions import StepInitializationException
 
 

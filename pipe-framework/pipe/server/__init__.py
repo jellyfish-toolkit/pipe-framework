@@ -4,13 +4,12 @@
 import typing as t
 
 from frozendict import frozendict
+from pipe.server.pipe import HTTPPipe
+from pipe.server.wrappers import PipeRequest, PipeResponse
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.shared_data import SharedDataMiddleware
 from werkzeug.routing import Map, Rule
 from werkzeug.serving import run_simple
-
-from pipe.server.pipe import HTTPPipe
-from pipe.server.wrappers import PipeRequest, PipeResponse
 
 
 class AppException(Exception):

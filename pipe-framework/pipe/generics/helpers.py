@@ -2,7 +2,6 @@ import typing as t
 from dataclasses import dataclass
 
 from frozendict import frozendict
-
 from pipe.core.base import Transformer
 
 
