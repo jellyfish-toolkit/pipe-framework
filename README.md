@@ -5,6 +5,8 @@ Allows you to create web-services with ETL approach instead of traditional MVC.
 
 **Not related to the HBO's Silicon Valley show.**
 
+![Lint](https://github.com/jellyfish-tech/pipe-framework/workflows/Lint/badge.svg)
+
 ## Introduction
 
 In Pipe framework you'll not find Models, Controllers and Views, but I will use them to demonstrate 
