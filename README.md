@@ -8,9 +8,10 @@ Data-oriented web microframework allows you to create web services with ETL appr
 
 You won't find Models, Controllers, and Views in the Pipe framework, but I'll use them to demonstrate its principles.
 
-All functionality of the Pipe framework is built using Steps.
 
+All functionality of the Pipe framework is built using Steps.
 Step is a self-sufficient, isolated piece of functionality, which does only one thing at a time
+
 (*single responsibility principle*).
 
 
@@ -20,7 +21,8 @@ For example, you have a simple task to create an API endpoint with todo tasks li
 
 In the traditional approach, you'll have to create a Todo model, which will represent a database table.
 In controller bound to route, you'll use the model instance to **extract** data about todo tasks,
-then **transform** it to the http response and send it to the user.
+
+then **transform** it to the http response and send it to the user. 
 
 > I've marked **extract** and **transform** so you can link MVC concepts to the concepts used in Pipe framework.
 
@@ -32,13 +34,15 @@ Controller -> Transformer
 
 View -> Loader
 
-This analogy isn't 100% correct but it demonstrates how parts of the approach are related to each other.
 
-> As you can see, I've set the view layer as Loader. I'll explain it a bit later.
+This analogy isn't 100% correct but it demonstrates how parts of the approach are related to each other. 
+
+> As you can see, I've set the view layer as Loader. I'll explain it a bit later.  
 
 ## Your first route
 
-Let's implement the above-mentioned task using the Pipe framework.
+Let's implement the above-mentioned task using the Pipe framework. 
+
 
 The first thing you should know is there are three kinds of steps:
 
@@ -50,25 +54,28 @@ How to decide which step do you require?
 
 1. If you need to get the data from an external source: extractor.
 2. If you need to send data outside of the framework: loader.
-3. If you need to change data in some way: transformer.
-
+3. If you need to change data in some way: transformer. 
+ 
 > That's why View is linked with Loader in the example. You can think of this as of loading data to the user browser.
 
-First, we need to decompose this functionality into smaller parts.
+First, we need to decompose this functionality into smaller parts. 
 For this task, we need to do the following:
 
 1. Extract data from a database;
 2. Transform data to the JSON HTTP response;
 3. Load this response to the browser.
 
-So we need 1 extractor, 1 transformer, and 1 loader.
-Thankfully, the Pipe framework provides several generic steps, so we can skip some boring parts,
+
+So we need 1 extractor, 1 transformer, and 1 loader. 
+Thankfully, the Pipe framework provides several generic steps, so we can skip some boring parts, 
 but anyway we need to write our own extractor to set the database access details for the step.
 
 As `Step` is an independent part of the application not aware of anything going beyond the step purpose, it is easily transferable between apps.
 The downside of this solution is that we cannot have a centralized configuration repository.
-All configuration applying to steps should be stored in the exact step properties, but sometimes it means that
-we need to write the same thing every time we write steps sharing the same configuration.
+
+All configuration applying to steps should be stored in the exact step properties, but sometimes it means that 
+we need to write the same thing every time we write steps sharing the same configuration. 
+
 
 For this purposes, the Pipe framework provides `@configure` decorator. You simply write properties you want to add to the step like here:
 
@@ -96,20 +103,19 @@ and then apply this to the step as in the example below:
 class EDatabase(EDBReadBase):
     pass
 ```
-
-> As you can tell, the name of the step begins with a capital letter E.
+As you can tell, the name of the step begins with a capital letter E.
 In the Pipe framework, you always implement Extractors, Transformers and Loaders, but it's really hard to keep names short if you use it like this:
-> ```python
-> class ExtractTodoFromDatabase(Extractor):
->     pass
-> ```
-> That is why all generic steps follow an agreement to indicate the step type with the first letter of the step name:
-> ```python
-> class ETodoFromDatabase(Extractor):
->     pass
-> ```
-> `E` is for extractor, `T` for transformer and `L` for loader.
-> But of course you are free to use any names you want.
+```python
+class ExtractTodoFromDatabase(Extractor):
+    pass
+```
+That is why all generic steps follow an agreement to indicate the step type with the first letter of the step name:
+```python
+class ETodoFromDatabase(Extractor):
+    pass
+```
+`E` is for extractor, `T` for transformer and `L` for loader.
+But of course you are free to use any names you want.
 
 So, let's create the project root folder:
 
@@ -174,8 +180,9 @@ class EDatabase(EDBReadBase):
 
 > Creating a whole folder structure could be an overhead for one small task, but this was done here to show the preferred folder structure for other projects.
 
-Pretty easy so far. We don't need to repeat these actions with other steps, because they are not
-configuration-dependent.
+
+Pretty easy so far. We don't need to repeat these actions with other steps, because they are not 
+configuration-dependent.  
 
 Actually, we're ready to create our first pipe now.
 
@@ -233,11 +240,12 @@ Now you can execute `$ python app.py` and go to `http://localhost:8000/todo/`.
 
 First, we need to find out what is store in Pipe framework.
 
-### Store
+### Store 
 
 After pipe is started, but before the first step pipe is called `before_pipe` hook (you can use this hook to perform some operations on the store before executing):
 
-```python
+```python        
+
 class BasePipe:
    def __init__(self, initial, inspection: bool = False):
         self.__inspection_mode = inspection
@@ -254,7 +262,7 @@ The Pipe framework uses [Valideer](https://github.com/podio/valideer) for valida
 
 #### Example
 
-All you have to do is to write a dict with the required fields (check [Valideer](https://github.com/podio/valideer) for more information about the available validators).
+All you have to do is to write a dict with the required fields (check [Valideer](https://github.com/podio/valideer) for more information about the available validators). 
 
 ```python
     required_fields = {'+some_field': valideer.Type(dict)} # `+` means required field
@@ -263,6 +271,7 @@ All you have to do is to write a dict with the required fields (check [Valideer]
 #### Dynamic validation
 
 Sometimes, you can have some dynamic fields in step, showing which store field contains required information.
+
 You can't know how this field is named, but you do know in what step variable this value is available.
 If you want to validate these fields as well, you'll have to add curly braces, inside which the name of a class field will be.
 
@@ -293,14 +302,14 @@ In this example, you can see the first operation available - `|` (OR)
 
 There is also the second operator - `&` (AND)
 
-```python
+```python 
     pipe_schema = {
         'GET': {
             'out': (
-                # In this case, if EDatabase step throws
+                # In this case, if EDatabase step throws 
                 # any exception, or SomethingImportantAsWell throws any exception
                 # then nothing happens and store without a change goes to next step
-                EDatabase(table_name='todo-items') & SomethingImportantAsWell(),
+                EDatabase(table_name='todo-items') & SomethingImportantAsWell(), 
                 TJsonResponseReady(data_field='todo-items_item'),
                 LJsonResponse()
             )

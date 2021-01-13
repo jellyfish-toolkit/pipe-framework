@@ -1,6 +1,7 @@
 loaders:
   - type: python
 processors:
+  - type: sphinx
   - type: filter
   - type: smart
   - type: crossref
