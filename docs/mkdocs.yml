@@ -1,0 +1,11 @@
+docs_dir: content
+mkdocs_config:
+  site_name: My Project
+  theme: readthedocs
+nav:
+- Introduction: index.md
+- API Documentation:
+  - Core: api/core.md
+  - Generics: api/generics.md
+  - Server: api/server.md
+site_name: My Project
