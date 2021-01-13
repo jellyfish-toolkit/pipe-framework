@@ -18,7 +18,7 @@ Step is self-sufficient, isolated piece of functionality, which do only one thin
 
 Let me explain this concept in detail.
 
-For example you have simple task - create API endpoint with todo tasks listing.
+For example, you have simple task - create API endpoint with todo tasks listing.
 
 In traditional approach you'll have to create a Todo model which will represent table in database. In controller bound
 to route you'll use model instance to **extract** data about todo tasks, then you'll **transform** it to the http
