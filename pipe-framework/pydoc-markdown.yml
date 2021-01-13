@@ -12,7 +12,6 @@ renderer:
         -   title: Introduction
             name: index
             source: ../README.md
-            directory: '..'
         -   title: API Documentation
             name: api
             children:
@@ -25,7 +24,7 @@ renderer:
                 -   title: Server
                     contents:
                         - pipe.server.*
+mkdocs_config:
     mkdocs_config:
-        mkdocs_config:
-            site_name: Pipe Framework
-            theme: readthedocs
+        site_name: Pipe Framework
+        theme: readthedocs
