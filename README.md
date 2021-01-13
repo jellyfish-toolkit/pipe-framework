@@ -244,7 +244,7 @@ class BasePipe:
         self.store = self.before_pipe(frozendict(initial))
 ```
 
-As you can see, store is nothing but the `frozendict` instance. Although you can't manipulate data inside the store, you can still create a new instance using the `frozendict().copy()` method. You can find more information in [readme file](https://github.com/slezica/python-frozendict).
+This hook accepts initial store, created from initial data passed to the pipe. As you can see, store is nothing but the `frozendict` instance. Although you can't manipulate data inside the store, you can still create a new instance using the `frozendict().copy()` method. You can find more information in [readme file](https://github.com/slezica/python-frozendict).
 
 ### Validation
 
