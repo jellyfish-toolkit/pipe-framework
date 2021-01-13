@@ -24,7 +24,3 @@ renderer:
                 -   title: Server
                     contents:
                         - pipe.server.*
-mkdocs_config:
-    mkdocs_config:
-        site_name: Pipe Framework
-        theme: readthedocs
