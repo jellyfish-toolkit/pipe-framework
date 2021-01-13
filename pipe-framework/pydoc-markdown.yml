@@ -1,37 +1,31 @@
 loaders:
-  - type: python
+    -   type: python
 processors:
-  - type: sphinx
-  - type: filter
-  - type: smart
-  - type: crossref
+    -   type: sphinx
+    -   type: filter
+    -   type: smart
+    -   type: crossref
 renderer:
-  type: hugo
-  markdown:
-    source_linker:
-      type: github
-      repo: jellyfish-tech/pipe-framework
-  config:
-    title: Pipe Framework
-    theme: { clone_url: "https://github.com/alex-shpak/hugo-book.git" }
-  # The "book" theme only renders pages in "content/docs" into the nav.
-  build_directory: ../docs
-  content_directory: ../docs/content/pages
-  default_preamble: { menu: main }
-  pages:
-    - title: Introduction
-      name: index
-      source: ../README.md
-      directory: '..'
-    - title: API Documentation
-      name: api
-      children:
-        - title: Core
-          contents:
-            - pipe.core.*
-        - title: Generics
-          contents:
-            - pipe.generics.*
-        - title: Server
-          contents:
-            - pipe.server.*
+    type: mkdocs
+    output_directory: ../docs
+    pages:
+        -   title: Introduction
+            name: index
+            source: ../README.md
+            directory: '..'
+        -   title: API Documentation
+            name: api
+            children:
+                -   title: Core
+                    contents:
+                        - pipe.core.*
+                -   title: Generics
+                    contents:
+                        - pipe.generics.*
+                -   title: Server
+                    contents:
+                        - pipe.server.*
+    mkdocs_config:
+        mkdocs_config:
+            site_name: Pipe Framework
+            theme: readthedocs
