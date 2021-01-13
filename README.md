@@ -8,9 +8,9 @@ Data-oriented web microframework allows you to create web services with ETL appr
 
 You won't find Models, Controllers, and Views in the Pipe framework, but I'll use them to demonstrate its principles.
 
-All functionality of the Pipe framework is built using Steps. 
+All functionality of the Pipe framework is built using Steps.
 
-Step is a self-sufficient, isolated piece of functionality, which does only one thing at a time 
+Step is a self-sufficient, isolated piece of functionality, which does only one thing at a time
 (*single responsibility principle*).
 
 
@@ -20,7 +20,7 @@ For example, you have a simple task to create an API endpoint with todo tasks li
 
 In the traditional approach, you'll have to create a Todo model, which will represent a database table.
 In controller bound to route, you'll use the model instance to **extract** data about todo tasks,
-then **transform** it to the http response and send it to the user. 
+then **transform** it to the http response and send it to the user.
 
 > I've marked **extract** and **transform** so you can link MVC concepts to the concepts used in Pipe framework.
 
@@ -32,13 +32,13 @@ Controller -> Transformer
 
 View -> Loader
 
-This analogy isn't 100% correct but it demonstrates how parts of the approach are related to each other. 
+This analogy isn't 100% correct but it demonstrates how parts of the approach are related to each other.
 
-> As you can see, I've set the view layer as Loader. I'll explain it a bit later.  
+> As you can see, I've set the view layer as Loader. I'll explain it a bit later.
 
 ## Your first route
 
-Let's implement the above-mentioned task using the Pipe framework. 
+Let's implement the above-mentioned task using the Pipe framework.
 
 The first thing you should know is there are three kinds of steps:
 
@@ -50,25 +50,25 @@ How to decide which step do you require?
 
 1. If you need to get the data from an external source: extractor.
 2. If you need to send data outside of the framework: loader.
-3. If you need to change data in some way: transformer. 
- 
+3. If you need to change data in some way: transformer.
+
 > That's why View is linked with Loader in the example. You can think of this as of loading data to the user browser.
 
-First, we need to decompose this functionality into smaller parts. 
+First, we need to decompose this functionality into smaller parts.
 For this task, we need to do the following:
 
 1. Extract data from a database;
 2. Transform data to the JSON HTTP response;
 3. Load this response to the browser.
 
-So we need 1 extractor, 1 transformer, and 1 loader. 
-Thankfully, the Pipe framework provides several generic steps, so we can skip some boring parts, 
+So we need 1 extractor, 1 transformer, and 1 loader.
+Thankfully, the Pipe framework provides several generic steps, so we can skip some boring parts,
 but anyway we need to write our own extractor to set the database access details for the step.
 
 As `Step` is an independent part of the application not aware of anything going beyond the step purpose, it is easily transferable between apps.
 The downside of this solution is that we cannot have a centralized configuration repository.
-All configuration applying to steps should be stored in the exact step properties, but sometimes it means that 
-we need to write the same thing every time we write steps sharing the same configuration. 
+All configuration applying to steps should be stored in the exact step properties, but sometimes it means that
+we need to write the same thing every time we write steps sharing the same configuration.
 
 For this purposes, the Pipe framework provides `@configure` decorator. You simply write properties you want to add to the step like here:
 
@@ -124,7 +124,7 @@ pipe-sample/
 
 All database-related steps will be in the db package, so let's create it as well:
 
-``` 
+```
 pipe-sample/
     src/
         db/
@@ -158,8 +158,8 @@ Then create the `extract.py` file to keep our configured extractor:
 from src.db.config import DB_STEP_CONFIG # our configuration
 
 """
-Pipe framework includes some generics for database as well, 
-you can check them in the 
+Pipe framework includes some generics for database as well,
+you can check them in the
 API documentation
 """
 from pipe.generics.db.orator_orm.extract import EDBReadBase
@@ -167,15 +167,15 @@ from pipe.generics.db.orator_orm.extract import EDBReadBase
 
 @configure(DB_STEP_CONFIG) # applying configuration to the step
 class EDatabase(EDBReadBase):
-    pass 
-    # we don't need to write anything inside the class, 
+    pass
+    # we don't need to write anything inside the class,
     # all logic is already implemented inside EDBReadBase
 ```
 
 > Creating a whole folder structure could be an overhead for one small task, but this was done here to show the preferred folder structure for other projects.
 
-Pretty easy so far. We don't need to repeat these actions with other steps, because they are not 
-configuration-dependent.  
+Pretty easy so far. We don't need to repeat these actions with other steps, because they are not
+configuration-dependent.
 
 Actually, we're ready to create our first pipe now.
 
@@ -185,24 +185,24 @@ Create `app.py` in the project root. Then put this code to the file:
 ```python
 from pipe.server import HTTPPipe, app
 from src.db.extract import EDatabase
-from pipe.server.http.load import LJsonResponse 
+from pipe.server.http.load import LJsonResponse
 from pipe.server.http.transform import TJsonResponseReady
 
 
 @app.route('/todo/') # this decorator tells to the WSGI app that this pipe serves this route
-class TodoResource(HTTPPipe): 
+class TodoResource(HTTPPipe):
     """
-    we extending HTTPPipe class which provides pipe_schema 
+    we extending HTTPPipe class which provides pipe_schema
     applicable to the http requests
     """
-    
+
     """
-    pipe_schema is a dictionary with sub-pipes for every HTTP method. 
+    pipe_schema is a dictionary with sub-pipes for every HTTP method.
     'in' and 'out' is a direction inside the pipe, when pipe handles request,
     first this request goes through 'in' and then through 'out' pipe.
     Here we don't need any processing before the response, so only 'out' is presented
     """
-    pipe_schema = { 
+    pipe_schema = {
         'GET': {
             'out': (
                 EDatabase(table_name='todo-items'),
@@ -214,7 +214,7 @@ class TodoResource(HTTPPipe):
 
 
 """
-Pipe framework uses Werkzeug as a WSGI server, so configuration is pretty familiar except 
+Pipe framework uses Werkzeug as a WSGI server, so configuration is pretty familiar except
 'use_inspection' argument. Inspection - is a mode for debugging. In case you set it to True
 before step execution framework will print data state and step name to the console
 """
@@ -233,28 +233,28 @@ Now you can execute `$ python app.py` and go to `http://localhost:8000/todo/`.
 
 First, we need to find out what is store in Pipe framework.
 
-### Store 
+### Store
 
-After pipe is started, but before the first step pipe is called `before_pipe` hook (you can use this hook to perform some operations on the store before executing):
+After pipe is started, but before the first step pipe is called `before_pipe` hook (you can use this hook to perform some operations on the store before executing). This hook accepts initial store, created from initial data passed to the pipe.
 
-```python        
+```python
 class BasePipe:
    def __init__(self, initial, inspection: bool = False):
         self.__inspection_mode = inspection
         self.store = self.before_pipe(frozendict(initial))
 ```
 
-This hook accepts initial store, created from initial data passed to the pipe. As you can see, store is nothing but the `frozendict` instance. Although you can't manipulate data inside the store, you can still create a new instance using the `frozendict().copy()` method. You can find more information in [readme file](https://github.com/slezica/python-frozendict).
+As you can see, store is nothing but the `frozendict` instance. Although you can't manipulate data inside the store, you can still create a new instance using the `frozendict().copy()` method. You can find more information in [readme file](https://github.com/slezica/python-frozendict).
 
 ### Validation
 
-Even though steps are independent pieces of functionality, sometimes they could require the specific data in the store to perfom certain operations. For this purposes, there are the `required_fields` field in step configuration. 
+Even though steps are independent pieces of functionality, sometimes they could require the specific data in the store to perfom certain operations. For this purposes, there are the `required_fields` field in step configuration.
 
 The Pipe framework uses [Valideer](https://github.com/podio/valideer) for validation, but it's a candidate for the deprecation during the next iterations.
 
 #### Example
 
-All you have to do is to write a dict with the required fields (check [Valideer](https://github.com/podio/valideer) for more information about the available validators). 
+All you have to do is to write a dict with the required fields (check [Valideer](https://github.com/podio/valideer) for more information about the available validators).
 
 ```python
     required_fields = {'+some_field': valideer.Type(dict)} # `+` means required field
@@ -263,28 +263,28 @@ All you have to do is to write a dict with the required fields (check [Valideer]
 #### Dynamic validation
 
 Sometimes, you can have some dynamic fields in step, showing which store field contains required information.
-You can't know how this field is named, but you do know in what step variable this value is available. 
+You can't know how this field is named, but you do know in what step variable this value is available.
 If you want to validate these fields as well, you'll have to add curly braces, inside which the name of a class field will be.
 
 ```python
-    required_fields = {'+{pk_field}': valideer.Type(dict)} # everything else is the same                             
-```                                                                                    
-The Pipe framework will substitute class field value for this field automatically, and then perform validation. 
+    required_fields = {'+{pk_field}': valideer.Type(dict)} # everything else is the same
+```
+The Pipe framework will substitute class field value for this field automatically, and then perform validation.
 
 ## Steps arithmetics
 
-You can combine two or more steps in case you need some conditional execution. 
+You can combine two or more steps in case you need some conditional execution.
 
 In this example, you can see the first operation available - `|` (OR)
 
-```python 
+```python
     pipe_schema = {
         'GET': {
             'out': (
-                # In this case, if EDatabase step throws 
+                # In this case, if EDatabase step throws
                 # any exception, then LNotFound step will be executed, with information about exception
-                # in store  
-                EDatabase(table_name='todo-items') | LNotFound(), 
+                # in store
+                EDatabase(table_name='todo-items') | LNotFound(),
                 TJsonResponseReady(data_field='todo-items_item'),
                 LJsonResponse()
             )
@@ -293,14 +293,14 @@ In this example, you can see the first operation available - `|` (OR)
 
 There is also the second operator - `&` (AND)
 
-```python 
+```python
     pipe_schema = {
         'GET': {
             'out': (
-                # In this case, if EDatabase step throws 
+                # In this case, if EDatabase step throws
                 # any exception, or SomethingImportantAsWell throws any exception
                 # then nothing happens and store without a change goes to next step
-                EDatabase(table_name='todo-items') & SomethingImportantAsWell(), 
+                EDatabase(table_name='todo-items') & SomethingImportantAsWell(),
                 TJsonResponseReady(data_field='todo-items_item'),
                 LJsonResponse()
             )
