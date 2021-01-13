@@ -97,7 +97,7 @@ class EDatabase(EDBReadBase):
     pass
 ```
 
-> As you can tell, the name of the step begins with a capital letter E.
+As you can tell, the name of the step begins with a capital letter E.
 In the Pipe framework, you always implement Extractors, Transformers and Loaders, but it's really hard to keep names short if you use it like this:
 ```python
 class ExtractTodoFromDatabase(Extractor):
