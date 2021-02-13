@@ -1,7 +1,7 @@
 <a name="pipe.server"></a>
 # pipe.server
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/__init__.py#L1)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/__init__.py#L1)
 
 WSGI App for http related Pipes
 
@@ -12,7 +12,7 @@ WSGI App for http related Pipes
 class App()
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/__init__.py#L19)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/__init__.py#L19)
 
 Main WSGI app wrapper which run pipes by request method
 
@@ -23,7 +23,7 @@ Main WSGI app wrapper which run pipes by request method
  | route(route: str)
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/__init__.py#L34)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/__init__.py#L34)
 
 Decorator for adding pipe as a handler for a route
 
@@ -39,7 +39,7 @@ Decorator for adding pipe as a handler for a route
  | wsgi_app(environ, start_response)
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/__init__.py#L53)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/__init__.py#L53)
 
 Main WSGI app, see werkzeug documentation for more
 
@@ -50,7 +50,7 @@ Main WSGI app, see werkzeug documentation for more
  | run(host: str = '127.0.0.1', port: int = 8000, use_inspection: bool = False, static_folder: t.Optional[str] = None, static_url: str = '/static', *args, **kwargs)
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/__init__.py#L81)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/__init__.py#L81)
 
 Method for running application, actually pretty similar to the Flask run method
 
@@ -74,7 +74,7 @@ Method for running application, actually pretty similar to the Flask run method
 <a name="pipe.server.wrappers"></a>
 # pipe.server.wrappers
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/wrappers.py#L1)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/wrappers.py#L1)
 
 <a name="pipe.server.wrappers.make_response"></a>
 #### make\_response
@@ -83,7 +83,7 @@ Method for running application, actually pretty similar to the Flask run method
 make_response(data, is_json: bool = False, *args, **kwargs) -> PipeResponse
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/wrappers.py#L16)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/wrappers.py#L16)
 
 Makes WSGI Response from `data` argument
 
@@ -100,12 +100,12 @@ WSGI Response
 <a name="pipe.server.http"></a>
 # pipe.server.http
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/http/__init__.py#L2)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/http/__init__.py#L2)
 
 <a name="pipe.server.http.transform"></a>
 # pipe.server.http.transform
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/http/transform.py#L1)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/http/transform.py#L1)
 
 <a name="pipe.server.http.transform.TJsonResponseReady"></a>
 ## TJsonResponseReady Objects
@@ -115,19 +115,19 @@ WSGI Response
 class TJsonResponseReady(Step)
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/http/transform.py#L11)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/http/transform.py#L11)
 
 Converts object from a 'data_field' for a simpliest API representation
 
 <a name="pipe.server.http.exceptions"></a>
 # pipe.server.http.exceptions
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/http/exceptions.py#L1)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/http/exceptions.py#L1)
 
 <a name="pipe.server.http.load"></a>
 # pipe.server.http.load
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/http/load.py#L1)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/http/load.py#L1)
 
 <a name="pipe.server.http.load.LJsonResponse"></a>
 ## LJsonResponse Objects
@@ -137,7 +137,7 @@ Converts object from a 'data_field' for a simpliest API representation
 class LJsonResponse(Step)
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/http/load.py#L11)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/http/load.py#L11)
 
 Creates JSON response from field in 'data_field' property
 
@@ -149,14 +149,14 @@ Creates JSON response from field in 'data_field' property
 class LResponse(Step)
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/http/load.py#L26)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/http/load.py#L26)
 
 Sends plain response from datafield, with status from field status
 
 <a name="pipe.server.http.extract"></a>
 # pipe.server.http.extract
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/http/extract.py#L1)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/http/extract.py#L1)
 
 <a name="pipe.server.http.extract.EFormData"></a>
 ## EFormData Objects
@@ -165,7 +165,7 @@ Sends plain response from datafield, with status from field status
 class EFormData(Step)
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/http/extract.py#L9)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/http/extract.py#L9)
 
 Generic extractor for form data from PipeRequest
 
@@ -176,7 +176,7 @@ Generic extractor for form data from PipeRequest
 class EQueryStringData(Step)
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/http/extract.py#L26)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/http/extract.py#L26)
 
 Generic extractor for data from query string which you can find after ? sign in URL
 
@@ -187,14 +187,14 @@ Generic extractor for data from query string which you can find after ? sign in 
 class EJsonBody(Step)
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/http/extract.py#L40)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/http/extract.py#L40)
 
 Generic extractor for data which came in JSON format
 
 <a name="pipe.server.pipe"></a>
 # pipe.server.pipe
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/pipe.py#L1)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/pipe.py#L1)
 
 <a name="pipe.server.pipe.HTTPPipe"></a>
 ## HTTPPipe Objects
@@ -203,7 +203,7 @@ Generic extractor for data which came in JSON format
 class HTTPPipe(BasePipe)
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/pipe.py#L9)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/pipe.py#L8)
 
 Pipe structure for the `server` package.
 
@@ -242,7 +242,7 @@ EDatabase(table_name='todo-items'), TJsonResponseReady(data_field='todo-items_it
  | request() -> PipeRequest
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/pipe.py#L49)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/pipe.py#L48)
 
 Getter for request object
 
@@ -253,7 +253,7 @@ Getter for request object
  | run_pipe() -> frozendict
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/e4b5ede64a00b483b26901ff3d20ee7204baf17f/pipe-framework/pipe/server/pipe.py#L58)
+[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/server/pipe.py#L57)
 
 The main method.
 Takes data and pass through pipe. Handles request and response
