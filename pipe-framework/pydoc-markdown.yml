@@ -1,3 +1,10 @@
+#@ def base_url():
+#@    if env.READTHEDOCS:
+#@      return "https://pipe-framework.readthedocs.io/en/" + env.READTHEDOCS_VERSION + "/"
+#@    else:
+#@      return None
+#@ end
+
 loaders:
     -   type: python
 processors:
@@ -8,6 +15,12 @@ processors:
 renderer:
     type: mkdocs
     output_directory: ../docs
+    markdown:
+        use_fixed_header_levels: true
+        add_method_class_prefix: false
+        source_linker:
+            type: github
+            repo: jellyfish-tech/pipe-framework
     pages:
         -   title: Introduction
             name: index
@@ -24,3 +37,6 @@ renderer:
                 -   title: Server
                     contents:
                         - pipe.server.*
+    mkdocs_config:
+        site_name: Pipe Framework
+        theme: readthedocs

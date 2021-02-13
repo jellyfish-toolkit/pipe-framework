@@ -16,18 +16,19 @@ class PipeResponse(BaseResponse, JSONMixin, CommonResponseDescriptorsMixin):
 def make_response(data, is_json: bool = False, *args, **kwargs) -> PipeResponse:
     """Makes WSGI Response from `data` argument
 
+    :param is_json: Flag indicating whether it JSON response, or a plain one
     :param data: Response data
     :return: WSGI Response
     :rtype: Response
     """
-    if is_json:
-        data = json.dumps(data, cls=PipeJsonEncoder)
-        return PipeResponse(data, content_type='application/json', *args, **kwargs)
-    else:
+    if not is_json:
         return PipeResponse(data, *args, **kwargs)
+    data = json.dumps(data, cls=PipeJsonEncoder)
+    return PipeResponse(data, content_type='application/json', *args, **kwargs)
 
 
 class PipeJsonEncoder(json.JSONEncoder):
     def default(self, obj):
+        # I'm sure you know what this is about
         if isinstance(obj, datetime):
             return str(obj)

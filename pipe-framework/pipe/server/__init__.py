@@ -17,8 +17,7 @@ class AppException(Exception):
 
 
 class App:
-    """Main WSGI app wrapper which run pipes according to request
-
+    """Main WSGI app wrapper which run pipes by request method
     """
 
     __map: Map = Map()
@@ -28,7 +27,8 @@ class App:
     __static_url: t.Optional[str] = None
     __inspection_mode: bool = False
 
-    def __make_endpoint(self, pipe: HTTPPipe):
+    @staticmethod
+    def __make_endpoint(pipe: HTTPPipe):
         return pipe.__name__
 
     def route(self, route: str):
@@ -73,16 +73,16 @@ class App:
         return response(environ, start_response)
 
     def __call__(self, environ, start_response):
-        if self.__static_serving:
-            app_with_static = SharedDataMiddleware(self.wsgi_app, {self.__static_url: self.__static_folder})
-            return app_with_static(environ, start_response)
-        else:
+        if not self.__static_serving:
             return self.wsgi_app(environ, start_response)
+        app_with_static = SharedDataMiddleware(self.wsgi_app, {self.__static_url: self.__static_folder})
+        return app_with_static(environ, start_response)
 
     def run(
         self,
         host: str = '127.0.0.1',
         port: int = 8000,
+        use_inspection: bool = False,
         static_folder: t.Optional[str] = None,
         static_url: str = '/static',
         *args,
@@ -103,7 +103,7 @@ class App:
         :type static_url: str
 
         :param use_inspection: Toggle on inspection mode of the framework
-       :type use_inspection: bool
+        :type use_inspection: bool
         """
 
         if static_folder is not None:
@@ -111,9 +111,8 @@ class App:
             self.__static_folder = static_folder
             self.__static_url = static_url
 
-        if kwargs.get('use_inspection', False):
+        if use_inspection:
             self.__inspection_mode = True
-            del kwargs['use_inspection']
 
         run_simple(host, port, self, *args, **kwargs)
 
