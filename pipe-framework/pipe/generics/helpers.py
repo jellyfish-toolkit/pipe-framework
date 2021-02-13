@@ -2,13 +2,13 @@ import typing as t
 from dataclasses import dataclass
 
 from frozendict import frozendict
-from pipe.core.base import Transformer
+from pipe.core.base import Step
 
 
 @dataclass
-class TPutDefaults(Transformer):
+class TPutDefaults(Step):
     """
-    Helper transformers, which puts values from defaults into Store
+    Helper transformers, which puts values from `defaults` into `Store`, to specific `field_name`
     """
     defaults: dict
     field_name: str
@@ -18,8 +18,11 @@ class TPutDefaults(Transformer):
 
 
 @dataclass
-class TLambda(Transformer):
-    lambda_: t.Callable = None
+class TLambda(Step):
+    """
+    Step for small transformations of a store. Useful for cases where writing specific step is an overengineering
+    """
+    lambda_: t.Optional[t.Callable] = None
 
-    def transform(self, store: frozendict):
+    def transform(self, store: frozendict) -> frozendict:
         return self.lambda_(store)

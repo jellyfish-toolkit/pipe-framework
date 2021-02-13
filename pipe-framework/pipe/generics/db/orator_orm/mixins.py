@@ -2,6 +2,7 @@ import copy
 import typing as t
 
 from orator import DatabaseManager
+from orator.query import QueryBuilder
 from pipe.core.exceptions import StepInitializationException
 
 
@@ -10,11 +11,11 @@ class DatabaseBaseMixin:
     Generic mixin for all Steps related to Database
     """
     connection_config: t.Dict[str, str]
-    __db = None
-    query = None
-    data_field = None
-    table_name = None
-    pk_field = None
+    __db: t.Optional[DatabaseManager] = None
+    query: t.Optional[QueryBuilder] = None
+    data_field: t.Optional[str] = None
+    table_name: t.Optional[str] = None
+    pk_field: t.Optional[str] = None
 
     def __init__(
         self,
@@ -37,7 +38,7 @@ class DatabaseBaseMixin:
         self.join_clause = join
         self.select_clause = select
 
-    def set_table(self, table_name: str):
+    def set_table(self, table_name: str) -> QueryBuilder:
         """
         :param table_name:
         :return: Orator Query builder
@@ -46,16 +47,16 @@ class DatabaseBaseMixin:
 
         return self.query
 
-    def set_select(self, select: t.Optional[tuple] = None):
+    def set_select(self, select: t.Optional[tuple] = None) -> QueryBuilder:
         """
         Sets columns for selecting. See Orator docs for detailed info
         :param select:
-        :return:
+        :return: Orator Query builder
         """
         if select is not None:
             return self.query.select(*select)
 
-    def set_where(self, where: t.Optional[tuple] = None):
+    def set_where(self, where: t.Optional[tuple] = None) -> QueryBuilder:
         """
         Sets where clause. See Orator docs for detailed info
 
@@ -65,7 +66,7 @@ class DatabaseBaseMixin:
         if where is not None:
             return self.query.where(*where)
 
-    def set_join(self, _join: t.Optional[tuple] = None):
+    def set_join(self, _join: t.Optional[tuple] = None) -> QueryBuilder:
         """
         Sets join clause. See Orator docs for detailed info.
 
@@ -75,7 +76,7 @@ class DatabaseBaseMixin:
         if _join is not None:
             return self.query.join(*_join)
 
-    def create_connection(self) -> t.NoReturn:
+    def create_connection(self) -> None:
         """
         Creates connection to database if it is None
         """
@@ -87,11 +88,10 @@ class DatabaseBaseMixin:
         Clears connection
         """
         self.__db.disconnect()
-        self.__db = None
 
 
 class CreateUpdateMixin:
-    def insert(self, data: t.Dict):
+    def insert(self, data: t.Dict) -> int:
         """
         Inserts data into a table
 
@@ -101,7 +101,7 @@ class CreateUpdateMixin:
         self.create_connection()
         return self.set_table(self.table_name).insert_get_id(data)
 
-    def update(self, data: t.Dict):
+    def update(self, data: t.Dict) -> int:
         """
         Updates data in the table
 
@@ -150,7 +150,7 @@ class ReadMixin:
 
 
 class DeleteMixin:
-    def delete(self, pk: t.Optional[int] = None):
+    def delete(self, pk: t.Optional[int] = None) -> int:
         """
         Deletes object by a 'pk' or by a where clause if presented
 
