@@ -1,9 +1,8 @@
 import typing as t
 
 from frozendict import frozendict
-
 from pipe.core.base import BasePipe, Step
-from pipe.server.wrappers import PipeResponse, make_response, PipeRequest
+from pipe.server.wrappers import PipeRequest, PipeResponse, make_response
 
 
 class HTTPPipe(BasePipe):
