@@ -1,12 +1,8 @@
 <a name="pipe.core.exceptions"></a>
 # pipe.core.exceptions
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/exceptions.py#L1)
-
 <a name="pipe.core.base"></a>
 # pipe.core.base
-
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L1)
 
 <a name="pipe.core.base.Step"></a>
 ## Step Objects
@@ -14,8 +10,6 @@
 ```python
 class Step()
 ```
-
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L10)
 
 Base class providing basic functionality for all steps related classes
 
@@ -36,8 +30,6 @@ Extractor, Loader, Transformer.
  | __and__(other: 'Step') -> 'Step'
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L29)
-
 Overriding boolean AND operation for merging steps:
 
 **Example**:
@@ -54,8 +46,6 @@ EUser(pk=1) & EBook(where=('id', 1))
 ```python
  | __or__(other: 'Step') -> 'Step'
 ```
-
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L52)
 
 Overriding boolean OR operation for merging steps:
 
@@ -83,8 +73,6 @@ EUser(pk=1) | LError()
  | validate(store: frozendict) -> frozendict
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L94)
-
 Validates store according to `Step.required_fields` field
 
 **Arguments**:
@@ -102,8 +90,6 @@ Store with adapted data
  | @classmethod
  | factory(cls, run_method: t.Callable, name: str = '', **arguments) -> type
 ```
-
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L114)
 
 Step factory, creates step with `run_method` provided
 
@@ -123,8 +109,6 @@ New Step
 ```python
  | run(store: frozendict) -> frozendict
 ```
-
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L125)
 
 Method which provide ability to run any step.
 
@@ -150,8 +134,6 @@ New frozendict object with updated pipe state
 class BasePipe()
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L150)
-
 Base class for all pipes, implements running logic and inspection of pipe state on every
 step
 
@@ -161,8 +143,6 @@ step
 ```python
  | __init__(initial: t.Mapping, inspection: bool = False)
 ```
-
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L159)
 
 **Arguments**:
 
@@ -175,8 +155,6 @@ step
 ```python
  | set_inspection(enable: bool = True) -> bool
 ```
-
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L167)
 
 Sets inspection mode
 
@@ -202,8 +180,6 @@ MyPipe({}).set_inspection(False)
  | before_pipe(store: frozendict) -> frozendict
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L228)
-
 Hook for running custom pipe (or anything) before every pipe execution
 
 **Arguments**:
@@ -221,8 +197,6 @@ Store
  | after_pipe(store: frozendict) -> frozendict
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L237)
-
 Hook for running custom pipe (or anything) after every pipe execution
 
 **Arguments**:
@@ -239,8 +213,6 @@ Store
 ```python
  | interrupt(store: frozendict) -> bool
 ```
-
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L246)
 
 Interruption hook which could be overridden, allow all subclassed pipes set one
 condition, which will
@@ -263,8 +235,6 @@ return value returned by step immediately (respects after_pipe hook)
 class NamedPipe(BasePipe)
 ```
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/base.py#L263)
-
 Simple pipe structure to interact with named pipes.
 
 **Example**:
@@ -282,16 +252,12 @@ image_path = MyPipe(<initial_store>).run_pipe('crop_image')
 <a name="pipe.core.decorators"></a>
 # pipe.core.decorators
 
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/decorators.py#L1)
-
 <a name="pipe.core.decorators.configure"></a>
 #### configure
 
 ```python
 configure(config: dict) -> t.Callable
 ```
-
-[[view_source]](https://github.com/jellyfish-tech/pipe-framework/blob/acb48de510fe270ff4255c65c9c5b351a448e71c/pipe-framework/pipe/core/decorators.py#L4)
 
 Configures Step class with values from `config variable`
 TODO: candidate for deprecation?
