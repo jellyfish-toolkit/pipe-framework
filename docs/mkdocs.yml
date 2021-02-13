@@ -5,4 +5,5 @@ nav:
   - Core: api/core.md
   - Generics: api/generics.md
   - Server: api/server.md
-site_name: My Project
+site_name: Pipe Framework
+theme: readthedocs

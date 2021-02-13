@@ -1,13 +1,14 @@
+import typing as t
 from collections import defaultdict
 from dataclasses import dataclass
 
 import valideer
 from frozendict import frozendict
-from pipe.core.base import Transformer
+from pipe.core.base import Step
 
 
 @dataclass
-class TJsonResponseReady(Transformer):
+class TJsonResponseReady(Step):
     """
     Converts object from a 'data_field' for a simpliest API representation
     """
@@ -17,9 +18,9 @@ class TJsonResponseReady(Transformer):
     data_field: str
 
     def transform(self, store: frozendict) -> frozendict:
-        response_data = store.get(self.data_field)
+        response_data: t.Union[list, dict] = store.get(self.data_field)
 
-        result = defaultdict()
+        result: defaultdict = defaultdict()
 
         if isinstance(response_data, list):
             result['count'] = len(response_data)

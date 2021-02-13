@@ -1,12 +1,12 @@
 import valideer
 from frozendict import frozendict
-from pipe.core.base import Extractor
+from pipe.core.base import Step
 from pipe.core.exceptions import ExtractorException
 from pipe.server.http.exceptions import EFormDataException
 from pipe.server.wrappers import PipeRequest
 
 
-class EFormData(Extractor):
+class EFormData(Step):
     """
     Generic extractor for form data from PipeRequest
     """
@@ -23,7 +23,7 @@ class EFormData(Extractor):
         return store
 
 
-class EQueryStringData(Extractor):
+class EQueryStringData(Step):
     """
     Generic extractor for data from query string which you can find after ? sign in URL
     """
@@ -37,7 +37,7 @@ class EQueryStringData(Extractor):
         return store
 
 
-class EJsonBody(Extractor):
+class EJsonBody(Step):
     """
     Generic extractor for data which came in JSON format
     """

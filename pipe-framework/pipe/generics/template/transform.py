@@ -3,10 +3,10 @@ import typing as t
 import jinja2
 import valideer as V
 from frozendict import frozendict
-from pipe.core.base import Transformer
+from pipe.core.base import Step
 
 
-class TJinja2TemplateResponseReady(Transformer):
+class TTemplateResponseReady(Step):
     required_fields = {'+{context_field}': V.Type((str, dict))}
 
     context_field: str = 'context'

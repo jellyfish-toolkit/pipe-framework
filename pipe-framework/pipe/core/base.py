@@ -24,7 +24,7 @@ class Step:
     _available_methods = ('extract', 'transform', 'load')
 
     # field for store validation schema
-    required_fields = None
+    required_fields: dict = {}
 
     def __and__(self, other: 'Step') -> 'Step':
         """
@@ -61,6 +61,8 @@ class Step:
         in case first step throws an exception then store goes to the second step
         with information about an exception in the store
 
+        :param other: Step which merge with
+        :return: Step which runs both of the steps according to an operator
         """
         def run(self, store: frozendict) -> frozendict:
 
@@ -74,7 +76,7 @@ class Step:
 
         return Step.factory(run, 'OrStep', obj_a=self, obj_b=other)()
 
-    def _parse_dynamic_fields(self) -> t.NoReturn:
+    def _parse_dynamic_fields(self) -> None:
         """
         Processes fields in validation config which should be taken from step instance
         """
@@ -91,7 +93,7 @@ class Step:
 
     def validate(self, store: frozendict) -> frozendict:
         """
-        Validates store according to `required_fields` field
+        Validates store according to `Step.required_fields` field
 
         :param store:
         :return: Store with adapted data
@@ -109,8 +111,16 @@ class Step:
         return store.copy(**adapted)
 
     @classmethod
-    def factory(cls, run_method: t.Callable, name: str = '', **kwargs):
-        return type(name, (cls, ), dict(run=run_method, **kwargs))
+    def factory(cls, run_method: t.Callable, name: str = '', **arguments) -> type:
+        """
+        Step factory, creates step with `run_method` provided
+
+        :param run_method: Method which will be runned by pipe
+        :param name: Name for a step
+        :param arguments: Arguments for a step constructor
+        :return: New Step
+        """
+        return type(name, (cls, ), dict(run=run_method, **arguments))
 
     def run(self, store: frozendict) -> frozendict:
         """
@@ -124,7 +134,7 @@ class Step:
         this behavior
 
         :param store: Current pipe state
-        :return: frozendict
+        :return: New frozendict object with updated pipe state
         """
 
         if self.required_fields is not None:
@@ -137,23 +147,6 @@ class Step:
         raise StepExecutionException(f"You should define one of this methods - {','.join(self._available_methods)}")
 
 
-# Base classes for semantics and behavior control
-# TODO: First candidates to remove in next iterations
-# TODO: ↓
-
-
-class Extractor(Step):
-    pass
-
-
-class Transformer(Step):
-    pass
-
-
-class Loader(Step):
-    pass
-
-
 class BasePipe:
     """
     Base class for all pipes, implements running logic and inspection of pipe state on every
@@ -164,22 +157,26 @@ class BasePipe:
     __inspection_mode: bool
 
     def __init__(self, initial: t.Mapping, inspection: bool = False):
+        """
+        :param initial: Initial store state
+        :param inspection: Inspection mode on/off
+        """
         self.__inspection_mode = inspection
         self.store = self.before_pipe(frozendict(initial))
 
-    def set_inspection(self, enable: bool = True):
+    def set_inspection(self, enable: bool = True) -> bool:
         """
         Sets inspection mode
 
         Examples:
 
-        *Toggle inspection on*:
+        **Toggle inspection on:**
 
         ```python
         MyPipe({}).set_inspection()
         ```
 
-        *Toggle inspection off*:
+        **Toggle inspection off:*
 
         ```python
         MyPipe({}).set_inspection(False)
@@ -187,7 +184,10 @@ class BasePipe:
         """
         self.__inspection_mode = enable
 
-    def __print_step(self, step: Step, store: frozendict):
+        return self.__inspection_mode
+
+    @staticmethod
+    def __print_step(step: Step, store: frozendict) -> None:
         """
         Prints passed step and store to the console
 
@@ -228,12 +228,18 @@ class BasePipe:
     def before_pipe(self, store: frozendict) -> frozendict:
         """
         Hook for running custom pipe (or anything) before every pipe execution
+
+        :param store:
+        :return: Store
         """
         return store
 
     def after_pipe(self, store: frozendict) -> frozendict:
         """
         Hook for running custom pipe (or anything) after every pipe execution
+
+        :param store:
+        :return: Store
         """
         return store
 
@@ -244,6 +250,9 @@ class BasePipe:
         be respected after any step was run. If method returns true, pipe will not be finished
         and will
         return value returned by step immediately (respects after_pipe hook)
+
+        :param store:
+        :return:
         """
         return False
 

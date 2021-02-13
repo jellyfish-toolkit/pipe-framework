@@ -1,13 +1,14 @@
+import typing as t
 from dataclasses import dataclass
 
 import valideer
 from frozendict import frozendict
-from pipe.core.base import Loader
+from pipe.core.base import Step
 from pipe.server.wrappers import make_response
 
 
 @dataclass
-class LJsonResponse(Loader):
+class LJsonResponse(Step):
     """
     Creates JSON response from field in 'data_field' property
     """
@@ -22,7 +23,7 @@ class LJsonResponse(Loader):
 
 
 @dataclass
-class LResponse(Loader):
+class LResponse(Step):
     """
     Sends plain response from datafield, with status from field status
     """
@@ -34,8 +35,8 @@ class LResponse(Loader):
 
     data_field: str = 'response'
     status_field: str = 'status'
-    headers: dict = None
-    status = None
+    headers: t.Optional[dict] = None
+    status: t.Optional[int] = None
 
     def load(self, store: frozendict):
         if self.status is None:
@@ -44,21 +45,21 @@ class LResponse(Loader):
         return make_response(store.get(self.data_field), status=self.status, headers=self.headers)
 
 
-class LNotFound(Loader):
+class LNotFound(Step):
     def load(self, store: frozendict):
         return make_response(f'object not found: {store.get("exception")}', status=404)
 
 
-class LServerError(Loader):
+class LServerError(Step):
     def load(self, store: frozendict):
         return make_response(f'server error: {store.get("exception")}', status=500)
 
 
-class LUnauthorized(Loader):
+class LUnauthorized(Step):
     def load(self, store: frozendict):
         return make_response(f'unauthorized: {store.get("exception")}', status=401)
 
 
-class LBadRequest(Loader):
+class LBadRequest(Step):
     def load(self, store: frozendict):
         return make_response(f'bad request: {store.get("exception")}', status=400)

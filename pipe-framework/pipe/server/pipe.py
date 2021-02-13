@@ -1,7 +1,8 @@
 import typing as t
 
+from frozendict import frozendict
 from pipe.core.base import BasePipe, Step
-from pipe.server.wrappers import PipeResponse, make_response
+from pipe.server.wrappers import PipeRequest, PipeResponse, make_response
 
 
 class HTTPPipe(BasePipe):
@@ -12,38 +13,52 @@ class HTTPPipe(BasePipe):
     (in): request extractor -> request transformer -> request loader
     (out): response extractor -> response transformer -> response loader
 
+    Example:
+
+    ```python
+    @app.route('/todo/')
+    class TodoResource(HTTPPipe):
+    pipe_schema = {
+        'GET': {
+            'out': (
+                EDatabase(table_name='todo-items'), TJsonResponseReady(data_field='todo-items_list'), LJsonResponse()
+            )
+        },
+        'POST': {
+            'in': (EJsonBody(), LDatabase(data_field='json', table_name='todo-items')),
+            'out': (
+                TLambda(lambda_=lambda store: store.copy(id=store.get('todo-items_insert'))),
+                EDatabase(table_name='todo-items'), TJsonResponseReady(data_field='todo-items_item'), LJsonResponse()
+            )
+        }
+    }
+    ```
+
+
     """
 
     pipe_schema: t.Dict[str, t.Dict[str, t.Iterable[Step]]] = {}
 
-    def __init__(self, request, values, *args, **kwargs):
+    def __init__(self, request, initial, *args, **kwargs):
         self.__request = request
-        self.__values = values
 
-        super(HTTPPipe, self).__init__(dict(request=request, **values), *args, **kwargs)
+        super(HTTPPipe, self).__init__(dict(request=request, **initial), *args, **kwargs)
 
     @property
-    def request(self):
+    def request(self) -> PipeRequest:
         """Getter for request object
         """
         return self.__request
 
-    @property
-    def values(self):
-        """Getter for values
-        """
-        return self.__values
-
-    def interrupt(self, store):
-        # If some step returned response, we should catch it
+    def interrupt(self, store) -> bool:
+        # If some step returned response, we should interrupt `pipe` execution
         return issubclass(store.__class__, PipeResponse) or isinstance(store, PipeResponse)
 
-    def run_pipe(self):
+    def run_pipe(self) -> frozendict:
         """The main method.
         Takes data and pass through pipe. Handles request and response
 
         :raises: PipeException
-
         """
         pipe_to_run = self.pipe_schema.get(self.request.method, None)
 

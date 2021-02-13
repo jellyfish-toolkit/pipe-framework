@@ -1,11 +1,6 @@
 import os
-from dataclasses import dataclass
-
-from frozendict import frozendict
-
-from pipe.core.base import Transformer
-from pipe.generics.template.transform import TJinja2TemplateResponseReady
+from pipe.generics.template.transform import TTemplateResponseReady
 
 
-class TTemplateResponseReady(TJinja2TemplateResponseReady):
+class TTemplateResponseReady(TTemplateResponseReady):
     template_folder = os.path.join(os.path.dirname(__file__), 'templates')
