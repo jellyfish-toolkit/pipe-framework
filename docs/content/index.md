@@ -97,19 +97,19 @@ class EDatabase(EDBReadBase):
     pass
 ```
 
-> As you can tell, the name of the step begins with a capital letter E.
+As you can tell, the name of the step begins with a capital letter E.
 In the Pipe framework, you always implement Extractors, Transformers and Loaders, but it's really hard to keep names short if you use it like this:
-> ```python
-> class ExtractTodoFromDatabase(Extractor):
->     pass
-> ```
-> That is why all generic steps follow an agreement to indicate the step type with the first letter of the step name:
-> ```python
-> class ETodoFromDatabase(Extractor):
->     pass
-> ```
-> `E` is for extractor, `T` for transformer and `L` for loader.
-> But of course you are free to use any names you want.
+```python
+class ExtractTodoFromDatabase(Extractor):
+    pass
+```
+That is why all generic steps follow an agreement to indicate the step type with the first letter of the step name:
+```python
+class ETodoFromDatabase(Extractor):
+    pass
+```
+`E` is for extractor, `T` for transformer and `L` for loader.
+But of course you are free to use any names you want.
 
 So, let's create the project root folder:
 
