@@ -32,7 +32,7 @@ class EQueryStringData(Step):
     request_field = 'request'
 
     def extract(self, store: frozendict):
-        request = store.get('request')
+        request = store.get(self.request_field)
         store = store.copy(**request.args)
         return store
 
@@ -46,7 +46,7 @@ class EJsonBody(Step):
     request_field = 'request'
 
     def extract(self, store: frozendict):
-        request = store.get('request')
+        request = store.get(self.request_field)
 
         if request.json is None:
             raise ExtractorException('JSON is missing from request')
