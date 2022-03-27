@@ -1,10 +1,9 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
+title: '[DATE]: [BUG_SHORT_TITLE]'
+labels: 'bug'
+assignees: 'NeZanyat'
 ---
 
 **Describe the bug**
