@@ -42,7 +42,7 @@ jobs:
         run: poetry install
 
       - name: Format
-        run: black src && isort src
+        run: poetry run black src && poetry run isort src
 
       - name: Lint
-        run: pflake8 src && isort --check-only --diff src # && mypy src
+        run: poetry run pflake8 src && poetry run isort --check-only --diff src # && mypy src
