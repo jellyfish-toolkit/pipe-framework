@@ -28,6 +28,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+
       - name: Setup Python
         uses: actions/setup-python@v2.2.1
 
@@ -44,4 +45,4 @@ jobs:
         run: black src && isort src
 
       - name: Lint
-      - run: pflake8 src && isort --check-only --diff src # && mypy src
+        run: pflake8 src && isort --check-only --diff src # && mypy src
