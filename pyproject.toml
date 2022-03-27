@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "pipe-framework"
+version = "0.1.0b"
+description = "Data oriented web framework"
+authors = ["Roman Latyshenko <rlatyshenko@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+Werkzeug = "1.0.1"
+Jinja2 = "2.11.3"
+frozendict = "1.2"
+orator = "0.9.9"
+rich = "5.2.1"
+valideer = "0.4.2"
+
+[tool.poetry.dev-dependencies]
+black = "^22.1.0"
+isort = "^5.10.1"
+flake8 = "^4.0.1"
+mypy = "^0.942"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
