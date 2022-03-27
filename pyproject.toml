@@ -19,7 +19,10 @@ black = "^22.1.0"
 isort = "^5.10.1"
 flake8 = "^4.0.1"
 mypy = "^0.942"
-pyproject-flake8 = "^0.0.1-alpha.3"
+docformatter = "^1.4"
+
+[tool.poetry.scripts]
+my-script = "poetry.console:run"
 
 [tool.black]
 include = '\.pyi?$'
@@ -41,9 +44,6 @@ exclude = '''
   )/
 )
 '''
-
-[tool.flake8]
-max-complexity = 10
 
 [tool.isort]
 profile = "black"
