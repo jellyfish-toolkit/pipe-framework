@@ -9,11 +9,10 @@ from pipe.core.base import Step
 
 @dataclass
 class TJsonResponseReady(Step):
-    """
-    Converts object from a 'data_field' for a simpliest API representation
-    """
+    """Converts object from a 'data_field' for a simpliest API
+    representation."""
 
-    required_fields = {'+{data_field}': valideer.Type((dict, list))}
+    required_fields = {"+{data_field}": valideer.Type((dict, list))}
 
     data_field: str
 
@@ -23,11 +22,11 @@ class TJsonResponseReady(Step):
         result: defaultdict = defaultdict()
 
         if isinstance(response_data, list):
-            result['count'] = len(response_data)
-            result['data'] = response_data
+            result["count"] = len(response_data)
+            result["data"] = response_data
         else:
             result = response_data
 
-        store = store.copy(**{'response': result})
+        store = store.copy(**{"response": result})
 
         return store

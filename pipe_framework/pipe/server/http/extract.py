@@ -7,29 +7,30 @@ from pipe.server.wrappers import PipeRequest
 
 
 class EFormData(Step):
-    """
-    Generic extractor for form data from PipeRequest
-    """
-    required_fields = {'+{request_field}': valideer.Type(PipeRequest)}
+    """Generic extractor for form data from PipeRequest."""
 
-    request_field = 'request'
-    method: str = 'POST'
+    required_fields = {"+{request_field}": valideer.Type(PipeRequest)}
+
+    request_field = "request"
+    method: str = "POST"
 
     def extract(self, store: frozendict):
         request = store.get(self.request_field)
         if request.method != self.method:
             raise EFormDataException("Invalid request method")
-        store = store.copy(**{'form': dict(request.form)})
+        store = store.copy(**{"form": dict(request.form)})
         return store
 
 
 class EQueryStringData(Step):
-    """
-    Generic extractor for data from query string which you can find after ? sign in URL
-    """
-    required_fields = {'+{request_field}': valideer.Type(PipeRequest)}
+    """Generic extractor for data from query string which you can find after ?
 
-    request_field = 'request'
+    sign in URL
+    """
+
+    required_fields = {"+{request_field}": valideer.Type(PipeRequest)}
+
+    request_field = "request"
 
     def extract(self, store: frozendict):
         request = store.get(self.request_field)
@@ -38,18 +39,17 @@ class EQueryStringData(Step):
 
 
 class EJsonBody(Step):
-    """
-    Generic extractor for data which came in JSON format
-    """
-    required_fields = {'+{request_field}': valideer.Type(PipeRequest)}
+    """Generic extractor for data which came in JSON format."""
 
-    request_field = 'request'
+    required_fields = {"+{request_field}": valideer.Type(PipeRequest)}
+
+    request_field = "request"
 
     def extract(self, store: frozendict):
         request = store.get(self.request_field)
 
         if request.json is None:
-            raise ExtractorException('JSON is missing from request')
+            raise ExtractorException("JSON is missing from request")
 
-        store = store.copy(**{'json': request.json})
+        store = store.copy(**{"json": request.json})
         return store

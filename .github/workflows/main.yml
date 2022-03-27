@@ -41,8 +41,5 @@ jobs:
       - name: Install dependencies
         run: poetry install
 
-      - name: Format
-        run: poetry run black src && poetry run isort src
-
       - name: Lint
-        run: poetry run pflake8 src && poetry run isort --check-only --diff src # && mypy src
+        run: make lint

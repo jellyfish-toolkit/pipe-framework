@@ -1,6 +1,4 @@
-"""WSGI App for http related Pipes
-
-"""
+"""WSGI App for http related Pipes."""
 import typing as t
 
 from frozendict import frozendict
@@ -17,8 +15,7 @@ class AppException(Exception):
 
 
 class App:
-    """Main WSGI app wrapper which run pipes by request method
-    """
+    """Main WSGI app wrapper which run pipes by request method."""
 
     __map: Map = Map()
     __pipes: frozendict = frozendict()
@@ -32,17 +29,17 @@ class App:
         return pipe.__name__
 
     def route(self, route: str):
-        """Decorator for adding pipe as a handler for a route
+        """Decorator for adding pipe as a handler for a route.
 
-        :param route: Werkzeug formatted route
-        :type route: string
+        :param route: Werkzeug formatted route :type route: string
         """
+
         def decorator(pipe):
             endpoint = self.__make_endpoint(pipe)
             if endpoint in self.__pipes:
                 raise AppException(
-                    'Route rewrites previously added route, please use hooks if you want to run '
-                    'more then one pipe'
+                    "Route rewrites previously added route, please use hooks if you want to run "
+                    "more then one pipe"
                 )
 
             self.__map.add(Rule(route, endpoint=endpoint))
@@ -51,9 +48,7 @@ class App:
         return decorator
 
     def wsgi_app(self, environ, start_response):
-        """Main WSGI app, see werkzeug documentation for more
-
-        """
+        """Main WSGI app, see werkzeug documentation for more."""
         request = PipeRequest(environ)
         adapter = self.__map.bind_to_environ(environ)
 
@@ -75,35 +70,24 @@ class App:
     def __call__(self, environ, start_response):
         if not self.__static_serving:
             return self.wsgi_app(environ, start_response)
-        app_with_static = SharedDataMiddleware(self.wsgi_app, {self.__static_url: self.__static_folder})
+        app_with_static = SharedDataMiddleware(
+            self.wsgi_app, {self.__static_url: self.__static_folder}
+        )
         return app_with_static(environ, start_response)
 
     def run(
         self,
-        host: str = '127.0.0.1',
+        host: str = "127.0.0.1",
         port: int = 8000,
         use_inspection: bool = False,
         static_folder: t.Optional[str] = None,
-        static_url: str = '/static',
+        static_url: str = "/static",
         *args,
         **kwargs
     ):
-        """Method for running application, actually pretty similar to the Flask run method
+        """Method for running application, actually pretty similar to the Flask
+        run method.
 
-        :param host: which host use for serving, defaults to '127.0.0.1'
-        :type host: str, optional
-
-        :param port: which port to listen, defaults to 8000
-        :type port: int, optional
-
-        :param static_folder: points to the folder with the static files, for serving
-        :type static_folder: str, optional
-
-        :param static_url: on what endpoint app should serve static files
-        :type static_url: str
-
-        :param use_inspection: Toggle on inspection mode of the framework
-        :type use_inspection: bool
         """
 
         if static_folder is not None:

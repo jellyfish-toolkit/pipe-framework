@@ -9,32 +9,30 @@ from pipe.server.wrappers import make_response
 
 @dataclass
 class LJsonResponse(Step):
-    """
-    Creates JSON response from field in 'data_field' property
-    """
+    """Creates JSON response from field in 'data_field' property."""
 
-    required_fields = {'+{data_field}': valideer.Type((list, dict))}
+    required_fields = {"+{data_field}": valideer.Type((list, dict))}
 
-    data_field: str = 'response'
+    data_field: str = "response"
     status: int = 200
 
     def load(self, store: frozendict):
-        return make_response(store.get(self.data_field), is_json=True, status=self.status)
+        return make_response(
+            store.get(self.data_field), is_json=True, status=self.status
+        )
 
 
 @dataclass
 class LResponse(Step):
-    """
-    Sends plain response from datafield, with status from field status
-    """
+    """Sends plain response from datafield, with status from field status."""
 
     required_fields = {
-        '+{data_field}': valideer.Type((str, list, dict)),
-        '{status_field}': valideer.Type(int),
+        "+{data_field}": valideer.Type((str, list, dict)),
+        "{status_field}": valideer.Type(int),
     }
 
-    data_field: str = 'response'
-    status_field: str = 'status'
+    data_field: str = "response"
+    status_field: str = "status"
     headers: t.Optional[dict] = None
     status: t.Optional[int] = None
 
@@ -42,7 +40,9 @@ class LResponse(Step):
         if self.status is None:
             self.status = store.get(self.status_field, 200)
 
-        return make_response(store.get(self.data_field), status=self.status, headers=self.headers)
+        return make_response(
+            store.get(self.data_field), status=self.status, headers=self.headers
+        )
 
 
 class LNotFound(Step):
