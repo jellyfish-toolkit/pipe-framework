@@ -1,6 +1,0 @@
-yapf
-isort
-flake8
-mypy
-pydoc-markdown
-types-frozendict
