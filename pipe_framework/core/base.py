@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+from typing import TypedDict
+
+from pipe_framework.core.base import Hooks, Pipe, Step
 from pipe_framework.core.runner import run_simple
 
 
-class SimplePipe:
+class SimplePipe(Pipe["SimplePipe", Step, TypedDict]):
     def __init__(
         self,
         steps,
-        state,
-        hooks,
+        state: TypedDict,
+        hooks: Hooks[TypedDict],
         runner=run_simple,
     ):
         self.steps = steps
@@ -17,8 +20,7 @@ class SimplePipe:
         self.state = state
 
     def set_steps(self, steps):
-        for step in steps:
-            self.add(step)
+        map(self.add, steps)
 
         return self
 
@@ -26,9 +28,6 @@ class SimplePipe:
         self.steps.append(step)
 
         return self
-
-    def get_steps(self):
-        return self.steps
 
     def set_runner(self, runner):
         self.run = runner
@@ -42,7 +41,10 @@ class SimplePipe:
         return self.run
 
     def __iter__(self):
-        return self.steps
+        yield self.steps
+
+    def __next__(self):
+        yield self.steps
 
     def __len__(self):
         return len(self.steps)

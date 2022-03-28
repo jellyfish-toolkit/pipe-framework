@@ -61,3 +61,4 @@ build-backend = "poetry.core.masonry.api"
 venv = "pipe-framework-uiqW28C9-py3.10"
 include = ["pipe_framework"]
 exclude = ["pipe_framework/pipe_alpha"]
+stubPath = "typings/"

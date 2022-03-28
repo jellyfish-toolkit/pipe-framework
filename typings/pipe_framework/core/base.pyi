@@ -3,11 +3,14 @@ from typing import (
     Callable,
     Generic,
     Iterable,
+    Iterator,
     List,
     Mapping,
     MutableSequence,
     Protocol,
+    Sequence,
     Sized,
+    TypedDict,
     TypeVar,
 )
 
@@ -27,26 +30,22 @@ class Step(Generic[StateType], Protocol):
 
 # PipeType type variable will be deprecated as soon as python 3.11 is released
 # (see https://peps.python.org/pep-0673/)
-class Pipe(Generic[PipeType_co, StepType, StateType], Sized, Protocol):
-    steps: MutableSequence[StepType]
-    hooks: Hooks
-    run: Runner
-    state: StateType
-
+class Pipe(Generic[PipeType_co, StepType, StateType], Iterator, Protocol):
+    def __init__(
+        self,
+        steps: MutableSequence[StepType],
+        state: StateType,
+        hooks: Hooks[StateType],
+        runner: Runner,
+    ) -> None: ...
     def __call__(self) -> Any: ...
-    def __iter__(self) -> Iterable[StepType]: ...
+    def __iter__(self) -> Iterator[StepType]: ...
     def __len__(self) -> int: ...
     def add(self, step: StepType) -> PipeType_co: ...
     def set_state(self, state: StateType) -> PipeType_co: ...
     def get_state(self) -> StateType: ...
-    def get_steps(self) -> Iterable[StepType]: ...
     def set_runner(self, runner: Runner) -> PipeType_co: ...
     def get_runner(self) -> Runner: ...
 
-class SimplePipe(Pipe["SimplePipe", Step, Mapping]):
-    steps: List[Step]
-    hooks: Hooks
-    run: Runner
-    state: Any
-
-    ...
+class SimplePipe(Pipe["SimplePipe", Step, TypedDict]):
+    def __init__(self, steps: List[Step], state, hooks, runner) -> None: ...
