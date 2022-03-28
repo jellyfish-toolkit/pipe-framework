@@ -1,0 +1,3 @@
+from typing import Callable
+
+def step(fn: Callable) -> Callable: ...

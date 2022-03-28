@@ -56,3 +56,8 @@ no_site_packages = true
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+venv = "pipe-framework-uiqW28C9-py3.10"
+include = ["pipe_framework"]
+exclude = ["pipe_framework/pipe_alpha"]
