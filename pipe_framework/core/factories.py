@@ -1,32 +1,39 @@
-from collections import namedtuple
-from typing import Any, Callable, TypedDict
+from typing import Generic, Tuple, TypeVar
 
-from pipe_framework.core.base import Hooks, SimplePipe
+from pipe_framework.core.base import Hooks, SimplePipe, Step
 
 
-def hooks(
-    *, before: Callable, after: Callable, interrupt: Callable[..., bool]
-) -> Hooks:
+def create_hooks(*, before=None, after=None, interrupt=None):
     bypass = lambda x: x
 
     return Hooks(
         before=before or bypass,
         after=after or bypass,
-        interrupt=interrupt or (lambda: False),
+        interrupt=interrupt or (lambda s: False),
     )
 
 
-def pipe(*callables: Callable, hooks: Hooks) -> Callable:
-    """
-    Pipe a series of callables together.
+T = TypeVar("T")
 
-    :param callables: A series of callables to pipe together.
-    :param options: A dictionary of options to pass to the callables.
-    :return: A callable that will call the callables in order.
-    """
+
+# class create_simple_pipe(Generic[T]):
+#     def __new__(
+#         cls, callables: Tuple[Step[T], ...], state: T, hooks: Hooks | None = None
+#     ):
+#         if hooks is None:
+#             hooks = create_hooks()
+
+#         _pipe = SimplePipe(callables, state, hooks)
+
+#         return _pipe
+
+
+def create_simple_pipe(
+    callables: Tuple[Step[T], ...], state: T, hooks: Hooks | None = None
+) -> SimplePipe[T]:
     if hooks is None:
-        hooks = hooks()
+        hooks = create_hooks()
 
-    _pipe = SimplePipe(callables, hooks)
+    _pipe = SimplePipe(callables, state, hooks)
 
     return _pipe

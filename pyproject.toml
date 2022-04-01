@@ -20,6 +20,7 @@ isort = "^5.10.1"
 flake8 = "^4.0.1"
 mypy = "^0.942"
 docformatter = "^1.4"
+pytest = "^7.1.1"
 
 [tool.poetry.scripts]
 my-script = "poetry.console:run"
@@ -62,3 +63,4 @@ venv = "pipe-framework-uiqW28C9-py3.10"
 include = ["pipe_framework"]
 exclude = ["pipe_framework/pipe_alpha"]
 stubPath = "typings/"
+executionEnvironments = [{ root = "pipe_framework" }]
