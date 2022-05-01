@@ -2,3 +2,4 @@
 max-line-length = 88
 max-complexity = 10
 ignore = W391,F401
+exclude=*.pyi
