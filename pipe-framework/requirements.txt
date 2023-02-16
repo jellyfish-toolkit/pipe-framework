@@ -1,4 +1,4 @@
-werkzeug==1.0.1
+werkzeug==2.2.3
 Jinja2==2.11.3
 frozendict==1.2
 orator==0.9.9
